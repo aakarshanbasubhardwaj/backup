@@ -54,11 +54,6 @@ jobs:
         sudo openvpn3 config import openvpn-client.ovpn
         sudo openvpn3 session-start myvpn
     
-    # Test the connection (ping the server or check the route)
-    - name: Test OpenVPN Connection
-      run: |
-        ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
-
-      - name: Deploy Docker containers
+    - name: Deploy Docker containers
         run: |
           ssh -i ${{ secrets.SSH_PRIVATE_KEY }} user@remote-server-ip "cd /path/to/your/docker && docker-compose up -d"
