@@ -1,4 +1,4 @@
-name: OpenVPN Setup for GitHub Actions Runner
+name: OpenVPN Setup and Docker Deployment for GitHub Actions Runner
 
 on:
   push:
@@ -24,7 +24,8 @@ jobs:
           lsb-release \
           ca-certificates \
           curl \
-          wget
+          wget \
+          docker.io
 
     # Add OpenVPN 3 repository
     - name: Add OpenVPN 3 repository
@@ -53,7 +54,23 @@ jobs:
       run: |
         sudo openvpn3 config import openvpn-client.ovpn
         sudo openvpn3 session-start myvpn
-    
-    - name: Deploy Docker containers
-        run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} user@remote-server-ip "cd /path/to/your/docker && docker-compose up -d"
+
+    # Test the OpenVPN connection (ping the server or check the route)
+    - name: Test OpenVPN Connection
+      run: |
+        ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
+
+    # Build and deploy Docker container
+    - name: Build Docker image
+      run: |
+        docker build -t your_image_name .
+
+    # Run Docker container
+    - name: Run Docker container
+      run: |
+        docker run -d --name your_container_name -p 80:80 your_image_name
+
+    # Verify the Docker container is running
+    - name: Verify Docker container
+      run: |
+        docker ps
