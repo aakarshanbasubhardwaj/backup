@@ -75,6 +75,10 @@ jobs:
       run: |
         ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
 
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
     # Build and deploy Docker container
     - name: Build Docker image
       run: |
