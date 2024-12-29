@@ -53,7 +53,7 @@ jobs:
       run: |
         sudo openvpn3 config import openvpn-client.ovpn
         sudo openvpn3 session-start myvpn
-
+    
     # Test the connection (ping the server or check the route)
     - name: Test OpenVPN Connection
       run: |
