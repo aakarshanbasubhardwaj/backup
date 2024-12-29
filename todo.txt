@@ -2,3 +2,7 @@
 CI/CD
 //TODO
 .env file creation and population hook in github 
+//TODO
+containerize the frontend and backend
+//TODO
+nginx reverse proxy setup

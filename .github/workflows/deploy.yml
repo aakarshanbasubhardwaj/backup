@@ -1,0 +1,20 @@
+name: Deploy Application
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Create Backend .env File
+      run: |
+        echo "API_KEY=${{ secrets.API_KEY }}" >> backup/backend/.env
+        echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
+        echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
