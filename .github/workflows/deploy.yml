@@ -30,7 +30,8 @@ jobs:
 
     - name: Start OpenVPN session
       run: |
-        sudo openvpn3 session-start myvpn
+        # Use OpenVPN3 command to start the session, typically with a session name
+        sudo openvpn3 session-start /tmp/openvpn-config.ovpn
 
     - name: Install Docker
       run: |
