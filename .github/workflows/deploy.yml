@@ -1,28 +1,63 @@
-name: Deploy Application
+name: OpenVPN Setup for GitHub Actions Runner
 
 on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  setup:
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Install OpenVPN
-        run: |
-          sudo add-apt-repository ppa:openvpn3/openvpn3
-          sudo apt update
-          sudo apt install openvpn3 -y
+    # Install OpenVPN 3 dependencies
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          gnupg2 \
+          lsb-release \
+          ca-certificates \
+          curl \
+          wget
 
-      - name: Set up OpenVPN connection
-        run: |
-          echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn_config.ovpn
-          sudo openvpn3 session-start --config openvpn_config.ovpn
+    # Add OpenVPN 3 repository
+    - name: Add OpenVPN 3 repository
+      run: |
+        curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
+        DISTRO=$(lsb_release -c | awk '{print $2}')
+        echo "deb http://packages.openvpn.net/openvpn3/debian $DISTRO main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
+        sudo apt update
+
+    # Install OpenVPN 3
+    - name: Install OpenVPN 3
+      run: |
+        sudo apt install -y openvpn3
+
+    # Verify OpenVPN 3 installation
+    - name: Verify OpenVPN 3 installation
+      run: |
+        openvpn3 version
+
+    # Save the OPENVPN_CONFIG secret to a file
+    - name: Save OpenVPN config
+      run: echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn-client.ovpn
+
+    # Start OpenVPN client connection using the saved .ovpn file
+    - name: Start OpenVPN connection
+      run: |
+        sudo openvpn3 config import openvpn-client.ovpn
+        sudo openvpn3 session-start myvpn
+
+    # Test the connection (ping the server or check the route)
+    - name: Test OpenVPN Connection
+      run: |
+        ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
 
       - name: Deploy Docker containers
         run: |
