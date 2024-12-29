@@ -7,3 +7,10 @@ setup https instead of http
 //TODO
 docker registry
 //TODO
+login using google or authenticator
+//TODO
+grouping files by users
+//TODO
+retrieve and display files for each user using pagination
+//TODO
+files to be displayed in a categorized manner
