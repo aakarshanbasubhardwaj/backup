@@ -6,25 +6,13 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
-      
-    - name: Ensure backup/backend directory exists
-      run: |
-        mkdir -p backup/backend
-        ls -l backup
-        
-      - name: Create Backend .env File
-      run: |
-        touch backup/backend/.env
-        echo "API_KEY=${{ secrets.API_KEY }}" >> backup/backend/.env
-        echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
-        echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
-        
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
       - name: Install OpenVPN
         run: |
           sudo apt update
