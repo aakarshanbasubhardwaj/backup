@@ -17,14 +17,14 @@ jobs:
       run: |
         mkdir -p backup/backend
         ls -l backup
-
-    - name: Create Backend .env File
+        
+      - name: Create Backend .env File
       run: |
         touch backup/backend/.env
         echo "API_KEY=${{ secrets.API_KEY }}" >> backup/backend/.env
         echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
         echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
-
+        
       - name: Install OpenVPN
         run: |
           sudo apt update
