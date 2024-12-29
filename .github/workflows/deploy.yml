@@ -15,27 +15,42 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # Install OpenVPN 3 dependencies
-    - name: Install dependencies
+    # Remove conflicting containerd package
+    - name: Remove conflicting containerd package
+      run: |
+        sudo apt-get remove -y containerd containerd.io
+
+    # Install Docker and its dependencies
+    - name: Install Docker dependencies
       run: |
         sudo apt update
-        sudo apt install -y \
-          gnupg2 \
-          lsb-release \
+        sudo apt-get install -y \
+          apt-transport-https \
           ca-certificates \
           curl \
-          wget \
-          docker.io
+          software-properties-common
 
-    # Add OpenVPN 3 repository
-    - name: Add OpenVPN 3 repository
+    # Add Docker's official GPG key
+    - name: Add Docker GPG key
       run: |
-        curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
-        DISTRO=$(lsb_release -c | awk '{print $2}')
-        echo "deb http://packages.openvpn.net/openvpn3/debian $DISTRO main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
+
+    # Add Docker repository
+    - name: Add Docker repository
+      run: |
+        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+
+    # Update apt package index
+    - name: Update apt package index
+      run: |
         sudo apt update
 
-    # Install OpenVPN 3
+    # Install Docker
+    - name: Install Docker
+      run: |
+        sudo apt install -y docker-ce docker-ce-cli containerd.io
+
+    # Install OpenVPN 3 dependencies
     - name: Install OpenVPN 3
       run: |
         sudo apt install -y openvpn3
@@ -70,7 +85,7 @@ jobs:
       run: |
         docker run -d --name your_container_name -p 80:80 your_image_name
 
-    # Verify the Docker container is running
+    # Verify Docker container is running
     - name: Verify Docker container
       run: |
         docker ps
