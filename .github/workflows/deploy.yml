@@ -13,7 +13,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install OpenVPN3
+    - name: Install dependencies and OpenVPN3
       run: |
         sudo apt-get update
         sudo apt-get install -y gnupg2 lsb-release ca-certificates curl
@@ -23,6 +23,10 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y openvpn3
 
+    - name: Verify OpenVPN3 installation
+      run: |
+        openvpn3 version
+
     - name: Import OpenVPN configuration
       run: |
         echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
@@ -30,7 +34,6 @@ jobs:
 
     - name: Start OpenVPN session
       run: |
-        # Use OpenVPN3 command to start the session, typically with a session name
         sudo openvpn3 session-start /tmp/openvpn-config.ovpn
 
     - name: Install Docker
