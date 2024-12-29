@@ -1,4 +1,4 @@
-name: Deploy to Remote Server via OpenVPN
+name: Deploy to Remote Server through SSH Tunnel
 
 on:
   push:
@@ -10,53 +10,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      # Step 1: Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y openvpn unzip lsb-release ca-certificates curl gnupg2
+      # Step 2: Set up SSH keys
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa <your-jump-host-public-ip> >> ~/.ssh/known_hosts
 
-    - name: Verify OpenVPN installation
-      run: |
-        openvpn --version
+      # Step 3: Set up the SSH Tunnel through the Jump Host
+      - name: Create SSH Tunnel through Jump Host
+        run: |
+          ssh -i ~/.ssh/id_rsa -L 2222:<your-server-zerotier-ip>:22 <jump-host-user>@<jump-host-public-ip> -fN
 
-    - name: Prepare OpenVPN configuration
-      run: |
-        echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
-        cat /tmp/openvpn-config.ovpn # Debugging: Output the OpenVPN config (for review, sensitive info will be omitted)
-
-    - name: Connect to OpenVPN
-      run: |
-        sudo openvpn --config /tmp/openvpn-config.ovpn --daemon
-        echo "OpenVPN process started. Checking for connection..."
-
-    - name: Wait for VPN connection
-      run: |
-        sleep 10 # Wait for VPN connection
-        ip a # Show the current network interfaces, including VPN interface (helpful for debugging)
-
-    - name: Verify VPN connection
-      run: |
-        ifconfig # Show the network interfaces to check if VPN interface is present
-        ping -c 4 8.8.8.8 # Test internet connectivity to ensure VPN is working
-
-    - name: Install Docker
-      run: |
-        sudo apt-get install -y docker.io
-
-    - name: Start Docker service
-      run: |
-        sudo systemctl start docker
-        sudo systemctl enable docker
-        sudo docker --version # Check Docker version to ensure it's running
-
-    - name: Deploy Docker container
-      run: |
-        sudo docker pull <YOUR-DOCKER-IMAGE> # Pull the Docker image
-        sudo docker run -d -p 80:80 <YOUR-DOCKER-IMAGE> # Start the container
-
-    - name: Verify container is running
-      run: |
-        sudo docker ps # List running containers to verify deployment
+      # Step 4: SSH into the remote server and deploy the code
+      - name: Deploy to remote server
+        run: |
+          ssh -i ~/.ssh/id_rsa -p 2222 <your-server-user>@localhost << 'EOF'
+            cd /path/to/your/app
+            git pull origin main
+            docker-compose down
+            docker-compose up -d
+          EOF
