@@ -1,6 +1,7 @@
 //TODO
 CI/CD
 //TODO
-.env file creation and population hook in github 
-//TODO
 nginx reverse proxy setup
+//TODO
+setup https instead of http
+//TODO

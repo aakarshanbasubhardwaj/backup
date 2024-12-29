@@ -1,4 +1,4 @@
-name: Deploy Application
+name: Deploy to Remote Server
 
 on:
   push:
@@ -6,38 +6,33 @@ on:
       - main
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      # Step 1: Checkout the code
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-    - name: Ensure backup/backend directory exists
-      run: |
-        mkdir -p backup/backend
-        ls -l backup
-
-    - name: Create Backend .env File
-      run: |
-        touch backup/backend/.env
-        echo "API_KEY=${{ secrets.API_KEY }}" >> backup/backend/.env
-        echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
-        echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
-
-    - name: Checkout Code
-        uses: actions/checkout@v3
-
-      - name: Install OpenVPN
+      # Step 2: Set up SSH to Local Machine
+      - name: Configure SSH Access
         run: |
-          sudo apt update
-          sudo apt install openvpn3 -y
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -t rsa 10.144.37.59 >> ~/.ssh/known_hosts
 
-      - name: Set up OpenVPN connection
+      # Step 3: Create SSH Tunnel to Remote Server
+      - name: Create SSH Tunnel
         run: |
-          echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn_config.ovpn
-          sudo openvpn3 session-start --config openvpn_config.ovpn
+          ssh -i ~/.ssh/id_rsa -L 3333:10.144.113.16:22 <local-user>@<local-machine-ip> -fN
 
-      - name: Deploy Docker containers
+      # Step 4: Deploy to Remote Server
+      - name: Deploy to Remote Server
         run: |
-          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} user@remote-server-ip "cd /path/to/your/docker && docker-compose up -d"
+          ssh -i ~/.ssh/id_rsa -p 3333 basu@localhost << 'EOF'
+            cd /backup
+            git pull origin main
+            docker-compose down
+            docker-compose up -d
+          EOF
