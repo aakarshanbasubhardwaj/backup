@@ -1,4 +1,4 @@
-name: Deploy to Remote Server through SSH Tunnel
+name: Deploy to Remote Server
 
 on:
   push:
@@ -14,21 +14,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # Step 2: Set up SSH keys
-      - name: Set up SSH
+      # Step 2: Set up SSH to Local Machine
+      - name: Configure SSH Access
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -t rsa 141.99.60.213 >> ~/.ssh/known_hosts
 
-      # Step 3: Set up the SSH Tunnel through the Jump Host
-      - name: Create SSH Tunnel through Jump Host
+      # Step 3: Create SSH Tunnel to Remote Server
+      - name: Create SSH Tunnel
         run: |
-          ssh -i ~/.ssh/id_rsa -L 2222:10.144.113.16:22 <jump-host-user>@<jump-host-public-ip> -fN
+          ssh -i ~/.ssh/id_rsa -L 2222:10.144.113.16:22 <local-user>@<local-machine-ip> -fN
 
-      # Step 4: SSH into the remote server and deploy the code
-      - name: Deploy to remote server
+      # Step 4: Deploy to Remote Server
+      - name: Deploy to Remote Server
         run: |
           ssh -i ~/.ssh/id_rsa -p 2222 basu@localhost << 'EOF'
             cd /backup
