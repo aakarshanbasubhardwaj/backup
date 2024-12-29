@@ -8,32 +8,31 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install dependencies and OpenVPN3
+    - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y gnupg2 lsb-release ca-certificates curl
-        curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
-        DISTRO=$(lsb_release -c | awk '{print $2}')
-        echo "deb http://packages.openvpn.net/openvpn3/debian $DISTRO main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
-        sudo apt-get update
-        sudo apt-get install -y openvpn3
+        sudo apt-get install -y openvpn unzip lsb-release ca-certificates curl gnupg2
 
-    - name: Verify OpenVPN3 installation
+    - name: Verify OpenVPN installation
       run: |
-        openvpn3 version
+        openvpn --version
 
     - name: Prepare OpenVPN configuration
       run: |
         echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
 
-    - name: Connect to OpenVPN using the configuration
+    - name: Connect to OpenVPN
       run: |
-        sudo openvpn3 --config /tmp/openvpn-config.ovpn
+        sudo openvpn --config /tmp/openvpn-config.ovpn --daemon
+
+    - name: Wait for VPN connection
+      run: |
+        sleep 10 # Allow time for the VPN to connect
 
     - name: Install Docker
       run: |
