@@ -25,9 +25,6 @@ jobs:
         echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
         echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
 
-    - name: Checkout Code
-        uses: actions/checkout@v3
-
       - name: Install OpenVPN
         run: |
           sudo apt update
