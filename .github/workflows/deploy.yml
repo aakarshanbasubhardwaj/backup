@@ -20,17 +20,17 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa 141.99.60.213 >> ~/.ssh/known_hosts
+          ssh-keyscan -t rsa 10.144.37.59 >> ~/.ssh/known_hosts
 
       # Step 3: Create SSH Tunnel to Remote Server
       - name: Create SSH Tunnel
         run: |
-          ssh -i ~/.ssh/id_rsa -L 2222:10.144.113.16:22 <local-user>@<local-machine-ip> -fN
+          ssh -i ~/.ssh/id_rsa -L 3333:10.144.113.16:22 <local-user>@<local-machine-ip> -fN
 
       # Step 4: Deploy to Remote Server
       - name: Deploy to Remote Server
         run: |
-          ssh -i ~/.ssh/id_rsa -p 2222 basu@localhost << 'EOF'
+          ssh -i ~/.ssh/id_rsa -p 3333 basu@localhost << 'EOF'
             cd /backup
             git pull origin main
             docker-compose down
