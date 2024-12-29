@@ -13,10 +13,18 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install OpenVPN
-        run: |
-          sudo apt update
-          sudo apt install openvpn3 -y
+      - name: Set up OpenVPN 3 repository
+      run: |
+        sudo add-apt-repository ppa:openvpn3/openvpn3
+        sudo apt update
+
+    - name: Install OpenVPN 3
+      run: |
+        sudo apt install -y openvpn3
+
+    - name: Verify OpenVPN 3 installation
+      run: |
+        openvpn3 version
 
       - name: Set up OpenVPN connection
         run: |
