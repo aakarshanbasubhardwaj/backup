@@ -5,3 +5,5 @@ nginx reverse proxy setup
 //TODO
 setup https instead of http
 //TODO
+docker registry
+//TODO
