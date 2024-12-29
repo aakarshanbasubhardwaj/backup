@@ -8,59 +8,38 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Install dependencies
+    - name: Install OpenVPN
       run: |
-        # Update and install necessary tools
-        sudo apt update
-        sudo apt install -y lsb-release ca-certificates wget gnupg2 unzip curl docker.io
-        
-        # Add the OpenVPN 3 repository (for Ubuntu-based systems)
-        sudo wget -qO - https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
-        sudo DISTRO=$(lsb_release -c | awk '{print $2}') && echo "deb http://packages.openvpn.net/openvpn3/debian $DISTRO main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
-        sudo apt update
-        
-    - name: Install OpenVPN3
-      run: |
-        # Install OpenVPN3 to connect to the server using OpenVPN
-        sudo apt install -y openvpn3
+        sudo apt-get update
+        sudo apt-get install -y openvpn3
 
-    - name: Import OpenVPN configuration and connect
+    - name: Import OpenVPN configuration
       run: |
-        # Import OpenVPN config and start the VPN session
-        echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn-config.ovpn
-        sudo openvpn3 config import openvpn-config.ovpn
+        echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
+        sudo openvpn3 config import /tmp/openvpn-config.ovpn
+
+    - name: Start OpenVPN session
+      run: |
         sudo openvpn3 session-start myvpn
 
-    - name: Install and configure ZeroTier
+    - name: Install Docker
       run: |
-        # Install ZeroTier (if it's not installed)
-        curl -s https://install.zerotier.com | sudo bash
-        # Join the ZeroTier network (replace with your network ID)
-        sudo zerotier-cli join ${ZT_NETWORK_ID}
-        # Wait for ZeroTier network to be ready (adjust sleep time if necessary)
-        sleep 10
+        sudo apt-get install -y docker.io
 
-    - name: Deploy Docker Container to Remote Server
+    - name: Deploy Docker container
       run: |
-        # Use SSH to deploy container to the server after VPN and ZeroTier connection is established
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
-        
-        # SSH into the server and deploy the Docker container
-        ssh -i private_key.pem -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null user@${{ secrets.ZT_SERVER_IP }} << 'EOF'
-          # Pull Docker image and deploy container
-          docker pull your-image-name
-          docker stop your-container-name || true
-          docker rm your-container-name || true
-          docker run -d --name your-container-name your-image-name
-        EOF
+        sudo systemctl start docker
+        sudo systemctl enable docker
+        # Pull the Docker image from your registry (adjust if you have a custom image)
+        sudo docker pull <YOUR-DOCKER-IMAGE>
+        # Run the Docker container
+        sudo docker run -d -p 80:80 <YOUR-DOCKER-IMAGE>
 
-    - name: Clean up
+    - name: Verify container is running
       run: |
-        # Remove the private key after the deployment is complete for security
-        rm -f private_key.pem
+        sudo docker ps
