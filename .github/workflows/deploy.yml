@@ -28,7 +28,8 @@ jobs:
           apt-transport-https \
           ca-certificates \
           curl \
-          software-properties-common
+          software-properties-common \
+          gnupg2
 
     # Add Docker's official GPG key
     - name: Add Docker GPG key
@@ -50,7 +51,18 @@ jobs:
       run: |
         sudo apt install -y docker-ce docker-ce-cli containerd.io
 
-    # Install OpenVPN 3 dependencies
+    # Add OpenVPN 3 repository and key
+    - name: Add OpenVPN 3 repository and GPG key
+      run: |
+        curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
+        echo "deb http://packages.openvpn.net/openvpn3/debian $(. /etc/os-release; echo $VERSION_CODENAME) main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
+
+    # Update apt package index after adding OpenVPN 3 repo
+    - name: Update apt package index for OpenVPN 3
+      run: |
+        sudo apt update
+
+    # Install OpenVPN 3
     - name: Install OpenVPN 3
       run: |
         sudo apt install -y openvpn3
@@ -75,10 +87,6 @@ jobs:
       run: |
         ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
 
-  deploy:
-    runs-on: ubuntu-latest
-    
-    steps:
     # Build and deploy Docker container
     - name: Build Docker image
       run: |
