@@ -1,64 +1,35 @@
-name: OpenVPN & Docker Setup
+name: Deploy with OpenVPN
 
 on:
   push:
     branches:
       - main
-  pull_request:
-    branches:
-      - main
 
 jobs:
-  setup:
-    runs-on: ubuntu-22.04
+  deploy:
+    runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set up Docker and OpenVPN
+    - name: Install dependencies
       run: |
-        # Update system and install prerequisites
-        sudo apt-get update
-        sudo apt-get upgrade -y
-        sudo apt-get install -y \
-          lsb-release \
-          ca-certificates \
-          wget \
-          gnupg2 \
-          unzip \
-          sudo \
-          bash
+        sudo apt update
+        sudo apt install -y lsb-release ca-certificates wget gnupg2 unzip
+        sudo wget -qO - https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
+        sudo DISTRO=$(lsb_release -c | awk '{print $2}') && echo "deb http://packages.openvpn.net/openvpn3/debian $DISTRO main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
+        sudo apt update
 
-        # Remove existing containerd if any conflict exists
-        sudo apt-get remove -y containerd
+    - name: Install OpenVPN3
+      run: sudo apt install -y openvpn3
 
-        # Install Docker dependencies
-        sudo apt-get install -y \
-          apt-transport-https \
-          curl \
-          gnupg2 \
-          software-properties-common
-
-        # Add Docker GPG key and repository
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-        
-        # Update package index and install Docker
-        sudo apt-get update
-        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
-
-        # Install OpenVPN if not installed
-        sudo apt-get install -y openvpn3
-
-    - name: Import OpenVPN configuration and start session
+    - name: Configure and start OpenVPN
       run: |
-        # Import OpenVPN configuration from the secret (replace with your secret)
-        echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn-config.ovpn
-        sudo openvpn3 config import openvpn-config.ovpn
+        sudo openvpn3 config import openvpn-***.ovpn
         sudo openvpn3 session-start myvpn
 
-    - name: Deploy Docker container
+    - name: Deploy Docker Container
       run: |
-        # Pull the Docker image and run the container
-        sudo docker pull your-docker-image:latest
-        sudo docker run -d --name your-container-name -p 8080:80 your-docker-image:latest
+        docker pull your-image-name
+        docker run -d your-image-name
