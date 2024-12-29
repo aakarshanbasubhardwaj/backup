@@ -25,28 +25,38 @@ jobs:
     - name: Prepare OpenVPN configuration
       run: |
         echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
+        cat /tmp/openvpn-config.ovpn # Debugging: Output the OpenVPN config (for review, sensitive info will be omitted)
 
     - name: Connect to OpenVPN
       run: |
         sudo openvpn --config /tmp/openvpn-config.ovpn --daemon
+        echo "OpenVPN process started. Checking for connection..."
 
     - name: Wait for VPN connection
       run: |
-        sleep 10 # Allow time for the VPN to connect
+        sleep 10 # Wait for VPN connection
+        ip a # Show the current network interfaces, including VPN interface (helpful for debugging)
+
+    - name: Verify VPN connection
+      run: |
+        ifconfig # Show the network interfaces to check if VPN interface is present
+        ping -c 4 8.8.8.8 # Test internet connectivity to ensure VPN is working
 
     - name: Install Docker
       run: |
         sudo apt-get install -y docker.io
 
-    - name: Deploy Docker container
+    - name: Start Docker service
       run: |
         sudo systemctl start docker
         sudo systemctl enable docker
-        # Pull the Docker image from your registry (adjust if you have a custom image)
-        sudo docker pull <YOUR-DOCKER-IMAGE>
-        # Run the Docker container
-        sudo docker run -d -p 80:80 <YOUR-DOCKER-IMAGE>
+        sudo docker --version # Check Docker version to ensure it's running
+
+    - name: Deploy Docker container
+      run: |
+        sudo docker pull <YOUR-DOCKER-IMAGE> # Pull the Docker image
+        sudo docker run -d -p 80:80 <YOUR-DOCKER-IMAGE> # Start the container
 
     - name: Verify container is running
       run: |
-        sudo docker ps
+        sudo docker ps # List running containers to verify deployment
