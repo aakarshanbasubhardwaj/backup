@@ -24,3 +24,20 @@ jobs:
         echo "API_KEY=${{ secrets.API_KEY }}" >> backup/backend/.env
         echo "DB_URL=${{ secrets.DB_URL }}" >> backup/backend/.env
         echo "PORT=${{ secrets.PORT }}" >> backup/backend/.env
+
+    - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install openvpn3 -y
+
+      - name: Set up OpenVPN connection
+        run: |
+          echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn_config.ovpn
+          sudo openvpn3 session-start --config openvpn_config.ovpn
+
+      - name: Deploy Docker containers
+        run: |
+          ssh -i ${{ secrets.SSH_PRIVATE_KEY }} user@remote-server-ip "cd /path/to/your/docker && docker-compose up -d"
