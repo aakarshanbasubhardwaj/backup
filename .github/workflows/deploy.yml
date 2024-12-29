@@ -1,103 +1,77 @@
-name: OpenVPN Setup and Docker Deployment for GitHub Actions Runner
+name: OpenVPN and Docker Setup
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch:
 
 jobs:
-  setup:
+  openvpn_docker_setup:
     runs-on: ubuntu-latest
 
     steps:
     # Checkout the repository
     - name: Checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
-    # Remove conflicting containerd package
-    - name: Remove conflicting containerd package
+    # Set up OpenVPN
+    - name: Install dependencies
       run: |
-        sudo apt-get remove -y containerd containerd.io
-
-    # Install Docker and its dependencies
-    - name: Install Docker dependencies
-      run: |
-        sudo apt update
+        sudo apt-get update
         sudo apt-get install -y \
-          apt-transport-https \
+          lsb-release \
           ca-certificates \
+          wget \
+          gnupg2 \
           curl \
-          software-properties-common \
-          gnupg2
+          sudo \
+          unzip \
+          bash \
+          docker.io \
+          docker-compose
 
-    # Add Docker's official GPG key
-    - name: Add Docker GPG key
-      run: |
-        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo tee /etc/apt/trusted.gpg.d/docker.asc
-
-    # Add Docker repository
+    # Add Docker's official GPG key and set up the stable repository
     - name: Add Docker repository
       run: |
-        sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-
-    # Update apt package index
-    - name: Update apt package index
-      run: |
-        sudo apt update
-
-    # Install Docker
-    - name: Install Docker
-      run: |
-        sudo apt install -y docker-ce docker-ce-cli containerd.io
-
-    # Add OpenVPN 3 repository and key
-    - name: Add OpenVPN 3 repository and GPG key
-      run: |
-        curl -fsSL https://packages.openvpn.net/packages-repo.gpg | sudo tee /etc/apt/trusted.gpg.d/openvpn.asc
-        echo "deb http://packages.openvpn.net/openvpn3/debian $(. /etc/os-release; echo $VERSION_CODENAME) main" | sudo tee /etc/apt/sources.list.d/openvpn-packages.list
-
-    # Update apt package index after adding OpenVPN 3 repo
-    - name: Update apt package index for OpenVPN 3
-      run: |
-        sudo apt update
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+        echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
     # Install OpenVPN 3
-    - name: Install OpenVPN 3
+    - name: Install OpenVPN3
       run: |
-        sudo apt install -y openvpn3
+        sudo apt-get update
+        sudo apt-get install -y \
+          ca-certificates \
+          curl \
+          gnupg \
+          lsb-release \
+          openvpn3
 
-    # Verify OpenVPN 3 installation
-    - name: Verify OpenVPN 3 installation
-      run: |
-        openvpn3 version
-
-    # Save the OPENVPN_CONFIG secret to a file
+    # Save the OpenVPN configuration from secrets
     - name: Save OpenVPN config
       run: echo "${{ secrets.OPENVPN_CONFIG }}" > openvpn-client.ovpn
 
-    # Start OpenVPN client connection using the saved .ovpn file
-    - name: Start OpenVPN connection
+    # Import OpenVPN configuration and start the session
+    - name: Import OpenVPN configuration and start session
       run: |
-        sudo openvpn3 config import openvpn-client.ovpn
-        sudo openvpn3 session-start myvpn
+        # Import the OpenVPN config
+        sudo openvpn3 config import --config openvpn-client.ovpn
+        
+        # Start the OpenVPN session
+        sudo openvpn3 session-start --config openvpn-client.ovpn
 
-    # Test the OpenVPN connection (ping the server or check the route)
-    - name: Test OpenVPN Connection
+    # Set up Docker container
+    - name: Build and run Docker container
       run: |
-        ping -c 4 <your_server_ip_or_domain> || echo "Ping failed. Check VPN connection."
+        # Navigate to your Docker setup directory (replace with the correct path)
+        cd path/to/your/docker-compose/file
+        
+        # Build and run the Docker container using Docker Compose
+        sudo docker-compose up -d
 
-    # Build and deploy Docker container
-    - name: Build Docker image
+    # Optional: Verify Docker container status
+    - name: Check Docker containers status
       run: |
-        docker build -t your_image_name .
-
-    # Run Docker container
-    - name: Run Docker container
-      run: |
-        docker run -d --name your_container_name -p 80:80 your_image_name
-
-    # Verify Docker container is running
-    - name: Verify Docker container
-      run: |
-        docker ps
+        sudo docker ps
