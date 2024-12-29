@@ -20,18 +20,18 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.DEPLOY_SSH_PUBLIC_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa <your-jump-host-public-ip> >> ~/.ssh/known_hosts
+          ssh-keyscan -t rsa 141.99.60.213 >> ~/.ssh/known_hosts
 
       # Step 3: Set up the SSH Tunnel through the Jump Host
       - name: Create SSH Tunnel through Jump Host
         run: |
-          ssh -i ~/.ssh/id_rsa -L 2222:<your-server-zerotier-ip>:22 <jump-host-user>@<jump-host-public-ip> -fN
+          ssh -i ~/.ssh/id_rsa -L 2222:10.144.113.16:22 <jump-host-user>@<jump-host-public-ip> -fN
 
       # Step 4: SSH into the remote server and deploy the code
       - name: Deploy to remote server
         run: |
-          ssh -i ~/.ssh/id_rsa -p 2222 <your-server-user>@localhost << 'EOF'
-            cd /path/to/your/app
+          ssh -i ~/.ssh/id_rsa -p 2222 basu@localhost << 'EOF'
+            cd /backup
             git pull origin main
             docker-compose down
             docker-compose up -d
