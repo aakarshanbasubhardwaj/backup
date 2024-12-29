@@ -27,14 +27,13 @@ jobs:
       run: |
         openvpn3 version
 
-    - name: Import OpenVPN configuration
+    - name: Prepare OpenVPN configuration
       run: |
         echo "${{ secrets.OPENVPN_CONFIG }}" > /tmp/openvpn-config.ovpn
-        sudo openvpn3 config import /tmp/openvpn-config.ovpn
 
-    - name: Start OpenVPN session
+    - name: Connect to OpenVPN using the configuration
       run: |
-        sudo openvpn3 session-start /tmp/openvpn-config.ovpn
+        sudo openvpn3 connect /tmp/openvpn-config.ovpn
 
     - name: Install Docker
       run: |
