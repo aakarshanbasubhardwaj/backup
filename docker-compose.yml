@@ -16,3 +16,8 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+    volumes:
+      - backup_data:/backend/data/backup_data
+
+volumes:
+  backup_data:
