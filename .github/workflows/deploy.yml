@@ -10,20 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: ZeroTier
-  	uses: zerotier/github-action@v1.0.1
-  	with:
-    		network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
-    		auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
+    	- name: ZeroTier
+  		uses: zerotier/github-action@v1.0.1
+  		with:
+    			network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
+    			auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
 
-    - name: PingHhost
-	shell: bash
- 	run: |
- 		count=10
-  		while ! ping -c 1 ${{ secrets.ZEROTIER_HOST_IP }} ; do
-  			echo "waiting..." ;
-   			sleep 1 ;
-    		let count=count-1
-  		done
-  		echo "ping success"
+    	- name: PingHhost
+		shell: bash
+ 		run: |
+ 			count=10
+  			while ! ping -c 1 ${{ secrets.ZEROTIER_HOST_IP }} ; do
+  				echo "waiting..." ;
+   				sleep 1 ;
+    			let count=count-1
+  			done
+  			echo "ping success"
    
