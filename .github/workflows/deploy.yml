@@ -16,13 +16,43 @@ jobs:
           network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
           auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
 
-      - name: ping host
+      - name: Ping host
         shell: bash
         run: |
           count=5
           while ! ping -c 1 ${{ secrets.ZEROTIER_HOST_IP }} ; do
-            echo "waiting..."
+            echo "Waiting for host..."
             sleep 1
             let count=count-1
           done
-          echo "ping success"
+          echo "Ping successful"
+
+      - name: Set up SSH key
+        shell: bash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ secrets.ZEROTIER_HOST_IP }} >> ~/.ssh/known_hosts
+
+      - name: Deploy code to server
+        shell: bash
+        run: |
+          ssh ${{ secrets.ZEROTIER_HOST_USER }}@${{ secrets.ZEROTIER_HOST_IP }} "
+            mkdir -p ~/app &&
+            echo 'Deploying code to ~/app' &&
+            cd ~/app &&
+            if [ -d 'backup/.git' ]; then
+              echo 'Repository exists. Pulling latest changes...' &&
+              cd backup &&
+              git pull origin main
+            else
+              echo 'Repository does not exist. Cloning repository...' &&
+              git clone ${{ secrets.PROJECT_SSH_URL }} backup &&
+              cd backup
+            fi &&
+            docker compose up --build &&
+						exit
+          "
