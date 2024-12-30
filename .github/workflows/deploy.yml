@@ -3,7 +3,8 @@
   with:
     network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
     auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
-- name: ping host
+
+- name: PingHhost
 	shell: bash
  	run: |
  		count=10
