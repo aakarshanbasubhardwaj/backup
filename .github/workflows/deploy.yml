@@ -1,10 +1,10 @@
-name: Deploy to Remote Server
+name: Deploy to remote server
 
 on:
 	push:
 		branches:
-			- main
-
+			main
+			
 jobs:
 	deploy:
 		runs-on: ubuntu-latest
