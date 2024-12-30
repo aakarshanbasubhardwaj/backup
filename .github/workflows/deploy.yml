@@ -10,29 +10,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    	- name: ZeroTier
+  		uses: zerotier/github-action@v1.0.1
+  		with:
+    			network_id: ${{ secrets.ZEROTIER_NETWORK_ID }}
+    			auth_token: ${{ secrets.ZEROTIER_CENTRAL_TOKEN }}
 
-      # Step 2: Set up SSH to Local Machine
-      - name: Configure SSH Access
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -t rsa 10.144.37.59 >> ~/.ssh/known_hosts
-
-      # Step 3: Create SSH Tunnel to Remote Server
-      - name: Create SSH Tunnel
-        run: |
-          ssh -i ~/.ssh/id_rsa -L 3333:10.144.113.16:22 <local-user>@<local-machine-ip> -fN
-
-      # Step 4: Deploy to Remote Server
-      - name: Deploy to Remote Server
-        run: |
-          ssh -i ~/.ssh/id_rsa -p 3333 basu@localhost << 'EOF'
-            cd /backup
-            git pull origin main
-            docker-compose down
-            docker-compose up -d
-          EOF
+    	- name: PingHhost
+		shell: bash
+ 		run: |
+ 			count=10
+  			while ! ping -c 1 ${{ secrets.ZEROTIER_HOST_IP }} ; do
+  				echo "waiting..." ;
+   				sleep 1 ;
+    			let count=count-1
+  			done
+  			echo "ping success"
+   
