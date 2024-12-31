@@ -45,7 +45,7 @@ jobs:
             echo 'Deploying code to ~/app' &&
             cd ~/app &&
             if [ -d 'backup/.git' ]; then
-              echo 'Repository exists. Pulling latest changes...' &&
+            echo 'Repository exists. Pulling latest changes...' &&
               cd backup &&
               git pull origin main
             else
@@ -55,5 +55,5 @@ jobs:
             fi &&
             docker compose down &&
             docker compose up --build &&
-						exit
+            exit
           "
