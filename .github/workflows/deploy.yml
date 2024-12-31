@@ -53,6 +53,7 @@ jobs:
               git clone ${{ secrets.PROJECT_SSH_URL }} backup &&
               cd backup
             fi &&
+            docker compose down &&
             docker compose up --build &&
 						exit
           "
