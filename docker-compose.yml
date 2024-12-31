@@ -7,6 +7,7 @@ services:
       - "8080:8080"
     depends_on:
       - backend
+    restart: always
 
   backend:
     build:
@@ -18,6 +19,7 @@ services:
       - PORT=3000
     volumes:
       - backup_data:/backend/data/backup_data
+    restart: always
 
 volumes:
   backup_data:
