@@ -1,16 +1,18 @@
 //TODO
-CI/CD
-//TODO
 nginx reverse proxy setup
 //TODO
 setup https instead of http
-//TODO
-docker registry
-//TODO
-login using google or authenticator
 //TODO
 grouping files by users
 //TODO
 retrieve and display files for each user using pagination
 //TODO
 files to be displayed in a categorized manner
+//TODO
+set axios base url
+//TODO
+use better secret for session and make it from .envfile and add this step to pipeline as well
+//TODO
+disable going back after login and logout
+//TODO
+make client id and client secret come from a .env file and add this step to pipeline as well

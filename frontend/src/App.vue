@@ -1,135 +1,57 @@
 <template>
-  <v-container fluid fill-height>
-    <v-row class="row">
-      <v-col
-        cols="12"
-        sm="8"
-        md="6"
-        lg="4"
-        class="text-center"
-      >
-        <v-file-input
-          v-model="files"
-          label="Select files to upload"
-          multiple
-          outlined
-          class="mb-4"
-        ></v-file-input>
-
-        <v-btn
-          color="primary"
-          @click="uploadFiles"
-          :disabled="!files.length"
-          class="mb-4"
-        >
-          Upload Files
-        </v-btn>
-
-        <v-alert v-if="uploadStatus" :type="uploadStatus.type" dismissible>
-          {{ uploadStatus.message }}
-        </v-alert>
-      </v-col>
-    </v-row>
-  </v-container>
-</template>
-
-<script>
-export default {
-  data() {
-    return {
-      files: [],
-      uploadStatus: null
-    };
-  },
-  methods: {
-    handleFileUpload(event) {
-      this.files = event.target.files;
-    },
-    async uploadFiles() {
-      const formData = new FormData();
-      for (const file of this.files) {
-        formData.append('files', file);
-      }
-
-      try {
-        const response = await fetch('http://10.144.113.16:3000/upload', {
-          method: 'POST',
-          body: formData
-        });
-        if (response.ok) {
-          this.uploadStatus = {
-            type: 'success',
-            message: 'Files uploaded successfully!'
-          };
-        } else {
-          this.uploadStatus = {
-            type: 'error',
-            message: 'File upload failed!'
-          };
-        }
-      } catch (error) {
-        this.uploadStatus = {
-          type: 'error',
-          message: 'Error uploading files: ' + error.message
-        };
-      }
-    }
-  }
-};
-</script>
-
-<style>
-.row{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100vh;
-}
-</style>
-
-
-
-
-<!-- <template>
   <v-app>
-    <v-container>
-      <v-btn @click="sendTestRequest" color="primary">Send Test Request</v-btn>
-
-      <v-alert v-if="response" type="success" class="mt-4">
-        {{ response }}
-      </v-alert>
-      
-      <v-alert v-if="error" type="error" class="mt-4">
-        {{ error }}
-      </v-alert>
-    </v-container>
+    <v-main>
+      <div>
+        <router-view></router-view>
+      </div>
+    </v-main>
+    <v-layout class="overflow-visible">
+      <v-bottom-navigation
+        v-model="active"
+        :mandatory="true"
+        color="primary"
+        grow
+        app
+      >
+        <v-btn to="/home" value="home" icon>
+          <v-icon>mdi-home</v-icon>
+          Home
+        </v-btn>
+        <v-btn to="/login" value="login" icon>
+          <v-icon>mdi-login</v-icon>
+          Login
+        </v-btn>
+        <v-btn to="/drive" value="drive" icon>
+          <v-icon>mdi-file</v-icon>
+          Drive
+        </v-btn>
+        <v-btn @click="submitLogout" value="logout" icon>
+          <v-icon>mdi-logout</v-icon>
+          Logout
+        </v-btn>
+      </v-bottom-navigation>
+    </v-layout>
+    
   </v-app>
-</template> -->
-
-<!-- <script>
+</template>
+<script>
 import axios from 'axios';
 
 export default {
-  data() {
-    return {
-      response: null,
-      error: null
-    };
-  },
   methods: {
-    async sendTestRequest() {
+    async submitLogout() {
       try {
-        // Send GET request to /test route
-        const res = await axios.get('http://localhost:3000/test');
-        
-        // Set the response data
-        this.response = res.data;
-        this.error = null;
-      } catch (err) {
-        // Handle error and display it
-        console.log(err)
-        this.error = "An error occurred while sending the request.";
-        this.response = null;
+        // Call the logout API
+        const response = await axios.get('http://localhost:3000/auth/logout', { withCredentials: true });
+
+        // Check response status
+        if (response.data.redirectUrl) {
+          window.location.href = response.data.redirectUrl;
+        } else {
+          console.log("Logout error", response.status);
+        }
+      } catch (error) {
+        console.error("Error during logout:", error);
       }
     }
   }
@@ -137,5 +59,8 @@ export default {
 </script>
 
 <style>
-/* Optional custom styles */
-</style> -->
+/* Optional styles for better presentation */
+body {
+  margin: 0;
+}
+</style>
