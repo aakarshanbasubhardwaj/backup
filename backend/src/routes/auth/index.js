@@ -2,11 +2,13 @@ import { Router } from "express";
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth2';
 import User from '../../../db/models/userModel.js'
+import dotenv from 'dotenv';
 
 const router = Router();
+dotenv.config();
 
-const GOOGLE_CLIENT_ID = ''
-const GOOGLE_CLIENT_SECRET = ''
+const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 
 passport.use(new GoogleStrategy({
     clientID:     GOOGLE_CLIENT_ID,

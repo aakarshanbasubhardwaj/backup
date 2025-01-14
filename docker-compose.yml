@@ -15,11 +15,16 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    environment:
-      - PORT=3000
     volumes:
       - backup_data:/backend/data/backup_data
     restart: always
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
 
 volumes:
   backup_data:

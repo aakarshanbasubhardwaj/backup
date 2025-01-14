@@ -11,7 +11,7 @@ import auth from './routes/auth/index.js';
 dotenv.config();
 
 const app = express();
-app.use(session({ secret: "cats"}))
+app.use(session({ secret: process.env.SECRET}))
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(cors({
@@ -23,7 +23,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const port = process.env.PORT||3000;
+const port = process.env.PORT;
 
 app.get('/test', (req, res) => {
   res.send('Test successful');

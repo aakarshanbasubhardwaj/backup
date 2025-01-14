@@ -53,6 +53,14 @@ jobs:
               git clone ${{ secrets.PROJECT_SSH_URL }} backup &&
               cd backup
             fi &&
+            cd backend &&
+            cat > .env <<EOL
+            PORT=${{ secrets.PORT }}
+            SECRET=${{ secrets.SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            EOL &&
+            cd .. &&
             docker compose down &&
             docker compose up -d --build &&
             exit

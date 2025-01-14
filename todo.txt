@@ -16,3 +16,5 @@ use better secret for session and make it from .envfile and add this step to pip
 disable going back after login and logout
 //TODO
 make client id and client secret come from a .env file and add this step to pipeline as well
+//TODO
+containerise mongoDB
