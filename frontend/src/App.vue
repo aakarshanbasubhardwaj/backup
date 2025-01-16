@@ -35,14 +35,14 @@
   </v-app>
 </template>
 <script>
-import axios from 'axios';
+import axios from './plugins/axios.js';
 
 export default {
   methods: {
     async submitLogout() {
       try {
         // Call the logout API
-        const response = await axios.get('http://localhost:3000/auth/logout', { withCredentials: true });
+        const response = await axios.get('/auth/logout', { withCredentials: true });
 
         // Check response status
         if (response.data.redirectUrl) {

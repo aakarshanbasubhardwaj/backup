@@ -61,6 +61,11 @@ jobs:
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
             EOL &&
             cd .. &&
+            cd frontend &&
+            cat > .env <<EOL
+            VUE_APP_ENV=${{ secrets.VUE_APP_ENV }}
+            EOL &&
+            cd .. &&
             docker compose down &&
             docker compose up -d --build &&
             exit

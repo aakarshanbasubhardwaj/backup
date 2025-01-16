@@ -9,12 +9,4 @@ retrieve and display files for each user using pagination
 //TODO
 files to be displayed in a categorized manner
 //TODO
-set axios base url
-//TODO
-use better secret for session and make it from .envfile and add this step to pipeline as well
-//TODO
 disable going back after login and logout
-//TODO
-make client id and client secret come from a .env file and add this step to pipeline as well
-//TODO
-containerise mongoDB

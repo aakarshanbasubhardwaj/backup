@@ -6,7 +6,7 @@ import { loadFonts } from './plugins/webfontloader'
 import BackupDrive from './components/drive/BackupDrive.vue'
 import BackupHome from './components/home/BackupHome.vue'
 import GoogleLogin from './components/auth/GoogleLogin.vue'
-import axios from 'axios'
+import axios from './plugins/axios.js'
 
 loadFonts()
 
@@ -22,29 +22,28 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     try {
-      const response = await axios.get('http://localhost:3000/auth/status', { withCredentials: true });
+      const response = await axios.get('/auth/status', { withCredentials: true });
       if (response.data.authenticated) {
-        next(); // User is authenticated, proceed
+        next();
       } else {
-        next('/login'); // User not authenticated, redirect to login
+        next('/login');
       }
     } catch (error) {
-      next('/login'); // Redirect to login on error (e.g., 401)
+      next('/login');
     }
   } else if (to.name === 'Login') {
-    // If the user is already authenticated and trying to visit the login page, redirect them to the homepage
     try {
-      const response = await axios.get('http://localhost:3000/auth/status', { withCredentials: true });
+      const response = await axios.get('/auth/status', { withCredentials: true });
       if (response.data.authenticated) {
-        next('/drive'); // Redirect to homepage if user is already logged in
+        next('/drive');
       } else {
-        next(); // Proceed to login if user is not logged in
+        next();
       }
     } catch (error) {
-      next(); // Proceed to login page if there's an error (e.g., 401)
+      next();
     }
   } else {
-    next(); // Proceed if route does not require authentication
+    next();
   }
 });
 
