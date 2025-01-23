@@ -3,7 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import { loadFonts } from './plugins/webfontloader'
-import BackupDrive from './components/drive/BackupDrive.vue'
 import BackupHome from './components/home/BackupHome.vue'
 import GoogleLogin from './components/auth/GoogleLogin.vue'
 import axios from './plugins/axios.js'
@@ -13,9 +12,9 @@ loadFonts()
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/home', name: "Home", component: BackupHome },
+    { path: '/' },
+    { path: '/home', name: "Home", component: BackupHome, meta: { requiresAuth: true } },
     { path: '/login', name: "Login", component: GoogleLogin },
-    { path: '/drive', name: "Drive", component: BackupDrive, meta: { requiresAuth: true } },
   ]
 })
 
@@ -35,7 +34,7 @@ router.beforeEach(async (to, from, next) => {
     try {
       const response = await axios.get('/auth/status', { withCredentials: true });
       if (response.data.authenticated) {
-        next('/drive');
+        next('/home');
       } else {
         next();
       }

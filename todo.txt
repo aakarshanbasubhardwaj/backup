@@ -10,3 +10,9 @@ retrieve and display files for each user using pagination
 files to be displayed in a categorized manner
 //TODO
 disable going back after login and logout
+//TODO
+add user base url for storage location
+//TODO
+show storage left on server
+//TODO
+create an app bar with collapsible drawer to enable logout on small screens

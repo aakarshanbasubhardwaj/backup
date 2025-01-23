@@ -1,66 +1,41 @@
 <template>
   <v-app>
     <v-main>
-      <div>
-        <router-view></router-view>
-      </div>
+      <router-view></router-view> 
     </v-main>
-    <v-layout class="overflow-visible">
-      <v-bottom-navigation
-        v-model="active"
-        :mandatory="true"
-        color="primary"
-        grow
-        app
-      >
-        <v-btn to="/home" value="home" icon>
-          <v-icon>mdi-home</v-icon>
-          Home
-        </v-btn>
-        <v-btn to="/login" value="login" icon>
-          <v-icon>mdi-login</v-icon>
-          Login
-        </v-btn>
-        <v-btn to="/drive" value="drive" icon>
-          <v-icon>mdi-file</v-icon>
-          Drive
-        </v-btn>
-        <v-btn @click="submitLogout" value="logout" icon>
-          <v-icon>mdi-logout</v-icon>
-          Logout
-        </v-btn>
-      </v-bottom-navigation>
-    </v-layout>
-    
   </v-app>
 </template>
+
 <script>
 import axios from './plugins/axios.js';
-
 export default {
+  created() {
+    this.$router.isReady().then(() => {
+      this.checkAuthentication();
+    });
+  },
   methods: {
-    async submitLogout() {
+    async checkAuthentication() {
       try {
-        // Call the logout API
-        const response = await axios.get('/auth/logout', { withCredentials: true });
-
-        // Check response status
-        if (response.data.redirectUrl) {
-          window.location.href = response.data.redirectUrl;
+        const response = await axios.get('/auth/status', { withCredentials: true });
+        if (response.data.authenticated) {
+          if (this.$router.currentRoute.value.path !== '/home') {
+            this.$router.push('/home'); 
+          }
         } else {
-          console.log("Logout error", response.status);
+          if (this.$router.currentRoute.value.path !== '/login') {
+            this.$router.push('/login');
+          }
         }
       } catch (error) {
-        console.error("Error during logout:", error);
+        console.error('Error checking authentication:', error);
+        this.$router.push('/login'); 
       }
-    }
+    },
   }
 };
 </script>
 
 <style>
-/* Optional styles for better presentation */
-body {
-  margin: 0;
-}
+
 </style>

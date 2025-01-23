@@ -17,13 +17,9 @@ passport.use(new GoogleStrategy({
     passReqToCallback   : true
   },
   async function(request, accessToken, refreshToken, profile, done) {
-    // User.findOrCreate({ googleId: profile.id }, function (err, user) {
-    //   return done(err, user);
-    // });
     let user = await User.findOne({ googleId: profile.id });
     
     if (!user) {
-      // If the user doesn't exist, create a new user
       user = await User.create({
         googleId: profile.id,
         email: profile.email,
@@ -54,9 +50,8 @@ router.get('/google',
 );
 
 router.get('/protected', isLoggedIn, (req, res) => {
-  // console.log(req.user)
   res.set('Cache-Control', 'no-store');
-  res.redirect('http://localhost:8080/drive');
+  res.redirect('http://localhost:8080/home');
 });
 
 router.get('/loggedin',
