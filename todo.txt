@@ -11,4 +11,4 @@ files to be displayed in a categorized manner
 //TODO
 show storage left on server
 //TODO
-create an app bar with collapsible drawer to enable logout on small screens
+drawer opens by defult on small screens
