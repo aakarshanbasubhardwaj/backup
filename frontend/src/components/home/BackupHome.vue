@@ -1,9 +1,10 @@
 <template>
     <v-app>
       <v-app-bar
-        color="primary"
+        color="#06367a"
         prominent
         v-if="$vuetify.display.mdAndDown"
+        style="position: fixed;"
       >
         <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
       </v-app-bar>
@@ -12,7 +13,9 @@
         color="#06367a" 
         v-model="drawer"
         :location="$vuetify.display.mobile ? 'left' : 'left'"
-        
+        height="100%"
+        style="position: fixed; display: flex; flex-direction: column; justify-content: space-between;"
+
         >
         <v-list>
           <v-list-item link :to="{ path: '/home' }" style="display: flex; align-items: center;">
@@ -42,8 +45,9 @@
               <span>Audio</span>
           </v-list-item>
         </v-list>
-  
+        
         <template v-slot:append>
+          
           <v-list-item style="color: #FFB354 !important; display: flex; align-items: center;">
             <v-icon size="30" left class="mr-5" icon="mdi-open-in-new"></v-icon>
             <a
@@ -56,14 +60,11 @@
           <span>ZeroTier</span> 
           </a>
           </v-list-item>
-          <v-list-item>
+          <v-list-item style="margin-bottom: 2vh;">
             <v-btn @click="submitLogout" block variant="flat" style="background-color: #ffffff; color: #06367a;">
               Logout
             </v-btn>
           </v-list-item>
-            <v-card-text class="text-center">
-        
-      </v-card-text>
           </template>
       </v-navigation-drawer>
       <v-main style="background-color: #ebf2fc;">
