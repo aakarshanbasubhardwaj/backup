@@ -11,7 +11,11 @@ import auth from './routes/auth/index.js';
 dotenv.config();
 
 const app = express();
-app.use(session({ secret: process.env.SECRET}))
+app.use(session({ 
+  secret: process.env.SECRET,
+  resave: false,
+  saveUninitialized: true,}
+))
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(cors({

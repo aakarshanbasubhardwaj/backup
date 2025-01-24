@@ -12,37 +12,33 @@ loadFonts()
 const router = createRouter({
   history: createWebHistory(),
   routes: [
-    { path: '/' },
+    { path: '/', redirect: { name: 'Login' }},
     { path: '/home', name: "Home", component: BackupHome, meta: { requiresAuth: true } },
     { path: '/login', name: "Login", component: GoogleLogin },
   ]
 })
 
 router.beforeEach(async (to, from, next) => {
-  if (to.meta.requiresAuth) {
-    try {
-      const response = await axios.get('/auth/status', { withCredentials: true });
+  try{
+    const response = await axios.get('/auth/status', { withCredentials: true });
+    if (to.meta.requiresAuth) {
       if (response.data.authenticated) {
         next();
       } else {
-        next('/login');
+        next({ name: 'Login', replace: true });
       }
-    } catch (error) {
-      next('/login');
-    }
-  } else if (to.name === 'Login') {
-    try {
-      const response = await axios.get('/auth/status', { withCredentials: true });
+    } else if (to.name === 'Login') {
       if (response.data.authenticated) {
-        next('/home');
+        next({ name: 'Home', replace: true });
       } else {
         next();
       }
-    } catch (error) {
+    } else {
       next();
     }
-  } else {
-    next();
+  } catch (error) {
+    console.error('Authentication check failed:', error);
+    next({ name: 'Login', replace: true });
   }
 });
 
