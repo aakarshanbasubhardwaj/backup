@@ -8,7 +8,3 @@ grouping files by users
 retrieve and display files for each user using pagination
 //TODO
 files to be displayed in a categorized manner
-//TODO
-show storage left on server
-//TODO
-drawer opens by defult on small screens
