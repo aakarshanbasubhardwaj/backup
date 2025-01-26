@@ -3,8 +3,14 @@ nginx reverse proxy setup
 //TODO
 setup https instead of http
 //TODO
-grouping files by users
-//TODO
 retrieve and display files for each user using pagination
 //TODO
 files to be displayed in a categorized manner
+//TODO
+add the step in pipeline to create the storage folder under home/basu
+//TODO
+make the user folder name on server come from github secrets and .env
+//TODO
+bind the cards on homescreen to display resperctive items
+//TODO
+make all content downloadable

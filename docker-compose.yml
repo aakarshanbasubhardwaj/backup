@@ -16,7 +16,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - backup_data:/backend/data/backup_data
+      - /home/aakarshanbasubhardwaj/storage:/home/aakarshanbasubhardwaj/storage
     restart: always
     depends_on:
       - mongo
@@ -27,5 +27,5 @@ services:
       - "27017:27017"
     restart: always
 
-volumes:
-  backup_data:
+# volumes:
+#   backup_data:

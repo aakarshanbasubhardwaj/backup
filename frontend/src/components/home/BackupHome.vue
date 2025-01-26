@@ -93,7 +93,7 @@
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-camera</v-icon>
                       <div style="font-weight: bold;">Pictures</div>
-                      <small style="color: #ffffff;">480 files</small>
+                      <small v-if="fileCounts && fileCounts.photos !== undefined" style="color: #ffffff;">{{ fileCounts.photos }} files</small>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -102,7 +102,7 @@
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-file-document</v-icon>
                       <div style="font-weight: bold;">Documents</div>
-                      <small style="color: #ffffff;">480 files</small>
+                      <small v-if="fileCounts && fileCounts.documents !== undefined" style="color: #ffffff;">{{ fileCounts.documents }} files</small>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -111,7 +111,7 @@
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-movie</v-icon>
                       <div style="font-weight: bold;">Videos</div>
-                      <small style="color: #ffffff;">480 files</small>
+                      <small v-if="fileCounts && fileCounts.videos !== undefined" style="color: #ffffff;">{{ fileCounts.videos }} files</small>
                     </v-card-text>
                   </v-card>
                 </v-col>
@@ -120,11 +120,48 @@
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-music-note</v-icon>
                       <div style="font-weight: bold;">Audio</div>
-                      <small style="color: #ffffff;">480 files</small>
+                      <small v-if="fileCounts && fileCounts.audio !== undefined" style="color: #ffffff;">{{ fileCounts.audio }} files</small>
                     </v-card-text>
                   </v-card>
                 </v-col>
               </v-row>
+
+              <v-row class="mt-4">
+                <v-col cols="12" sm="6" md="3">
+                  <div style="font-weight: bold; font-size: larger; color: #06367a;">Files</div>
+                </v-col>
+              </v-row>
+
+              <v-row class="mt-4">
+                <v-col
+                  v-for="(file, index) in imageFiles"
+                  :key="index"
+                  class="d-flex child-flex"
+                  cols="4"
+                >
+                  <v-img
+                    :src="`http://localhost:3000/images/${userID}/photos/${file}`"
+                    aspect-ratio="1"
+                    class="bg-grey-lighten-2"
+                    cover
+                    :styles="{ objectFit: 'contain' }"
+                  >
+                    <template v-slot:placeholder>
+                      <v-row
+                        align="center"
+                        class="fill-height ma-0"
+                        justify="center"
+                      >
+                        <v-progress-circular
+                          color="grey-lighten-5"
+                          indeterminate
+                        ></v-progress-circular>
+                      </v-row>
+                    </template>
+                  </v-img>
+                </v-col>
+              </v-row>
+
             
             </v-col>
             
@@ -139,7 +176,7 @@
                     label="Select files to upload"
                     multiple
                     outlined
-                    style="display: none;"
+                    v-show="false"
                     ref="fileInput"
                     class="mb-4"
                   >
@@ -156,10 +193,11 @@
                     </v-btn>
                     <v-progress-linear
                       v-if="uploadProgress > 0"
-                      :value="uploadProgress"
+                      :model-value="uploadProgress"
                       height="10"
-                      color="266fd5"
+                      color="#266fd5"
                       class="mt-4"
+                      striped
                     ></v-progress-linear>
                   </div>
                   <div>
@@ -209,6 +247,15 @@ import axios from '../../plugins/axios.js';
         },
         progress: 0,
         error: null,
+        fileCounts: {
+          photos: 0,
+          videos: 0,
+          audio: 0,
+          documents: 0,
+          others: 0,
+        },
+        imageFiles: [],
+        userID: null,
       };
     },
     watch: {
@@ -217,7 +264,7 @@ import axios from '../../plugins/axios.js';
       },
     },
     mounted() {
-      this.fetchDiskUsage();
+      this.fetchDiskUsageAndFileCounts();
     },
     methods: {
       handleFileUpload(event) {
@@ -232,6 +279,9 @@ import axios from '../../plugins/axios.js';
         for (const file of this.filesToUpload) {
           formData.append('files', file);
         }
+        for (let key of formData.keys()) {
+      console.log('FormData Key:', key, 'Value:', formData.get(key));
+    }
   
         try {
           const response = await axios.post("http://localhost:3000/upload", formData, {
@@ -241,6 +291,7 @@ import axios from '../../plugins/axios.js';
           onUploadProgress: (progressEvent) => {
             this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
           },
+          withCredentials: true,
         });
           if (response.status === 200) {
             this.filesToUpload = [];
@@ -279,7 +330,7 @@ import axios from '../../plugins/axios.js';
           console.error("Error during logout:", error);
         }
       },
-      async fetchDiskUsage() {
+      async fetchDiskUsageAndFileCounts() {
         try {
           const response = await axios.get("/disk-usage");
           this.diskUsage = response.data.data;
@@ -291,6 +342,28 @@ import axios from '../../plugins/axios.js';
         } catch (err) {
           console.error("Error fetching disk usage:", err);
         }
+
+        try {
+          const response = await axios.get("/file-counts", { withCredentials: true });
+          this.fileCounts = response.data;
+        } catch (err) {
+          console.error("Error fetching file counts:", err);
+        }
+
+        try {
+          const response = await axios.get('/userID', { withCredentials: true });
+          this.userID = response.data;
+        } catch (err) {
+          console.error('Error fetching userID:', err);
+        }
+
+        try {
+          const response = await axios.get('/get-images', { withCredentials: true });
+          this.imageFiles = response.data.files; 
+        } catch (err) {
+          console.error('Error fetching images:', err);
+        }
+
       },
       
       parseSize(sizeString) {
@@ -312,6 +385,22 @@ import axios from '../../plugins/axios.js';
         }
       },
     },
+    async fetchFileCount () {
+      try {
+          const response = await axios.get("/file-counts");
+          this.fileCounts = response.data.fileCounts;
+        } catch (err) {
+          console.error("Error fetching file counts:", err);
+        }
+    },
+    async fetchImages() {
+    try {
+      const response = await axios.get('/get-images', { withCredentials: true });
+      this.imageFiles = response.data.files;  // Store the file names in imageFiles
+    } catch (err) {
+      console.error('Error fetching images:', err);
+    }
+  }
   };
   </script>
   

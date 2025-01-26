@@ -8,7 +8,7 @@ import passport from 'passport';
 import conn from '../db/connection/conn.js'
 import auth from './routes/auth/index.js';
 import { exec } from 'child_process';
-
+import fs from 'fs';
 dotenv.config();
 
 const app = express();
@@ -34,20 +34,91 @@ app.get('/test', (req, res) => {
   res.send('Test successful');
 });
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, '/backend/data/backup_data');
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
+const dynamicUpload = (req, res, next) => {
+  try {
+    const userFolder = `/home/aakarshanbasubhardwaj/storage/${req.user.id}`;
+    
+    if (!fs.existsSync(userFolder)) {
+      fs.mkdirSync(userFolder, { recursive: true });
+      console.log('User folder created successfully');
+    }
+
+    const getCategoryFolder = (file) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+    
+      if (['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.heic', '.heif', '.webp', '.svg', '.raw', '.ico', '.jfif', '.dng', '.exr'].includes(ext)) {
+        return 'photos';
+      } else if (['.mp4', '.mkv', '.avi', '.mov', '.flv', '.webm', '.hevc', '.wmv', '.mpg', '.mpeg', '.3gp', '.vob', '.ts', '.rm', '.rmvb', '.ogv'].includes(ext)) {
+        return 'videos';
+      } else if (['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.alac', '.aiff', '.ape', '.opus', '.midi', '.mka'].includes(ext)) {
+        return 'audio';
+      } else if (['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.csv', '.epub', '.mobi', '.chm', '.xml', '.json', '.html', '.htm', '.tex', '.yml', '.md'].includes(ext)) {
+        return 'documents';
+      } else {
+        return 'others';
+      }
+    };
+    
+
+    const storage = multer.diskStorage({
+      destination: function (req, file, cb) {
+        const categoryFolder = getCategoryFolder(file);
+        const categoryPath = path.join(userFolder, categoryFolder);
+
+        if (!fs.existsSync(categoryPath)) {
+          fs.mkdirSync(categoryPath, { recursive: true });
+          console.log(`Category folder '${categoryFolder}' created.`);
+        }
+
+        cb(null, categoryPath);  
+      },
+      filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));  
+      }
+    });
+
+    const upload = multer({ storage: storage });
+
+    upload.array("files", 10)(req, res, function (err) {
+      if (err) {
+        console.error('Upload Error:', err);
+        return res.status(500).send('Error uploading files.');
+      }
+      next();
+    });
+
+  } catch (error) {
+    console.error('Error:', error);
+    return res.status(500).send('Internal Server Error');
   }
+};
+
+app.post('/upload', dynamicUpload, (req, res) => {
+  res.status(200).json({ message: `Files uploaded successfully!` });
 });
 
-const upload = multer({ storage: storage });
+app.get('/file-counts', (req, res) => {
+  const userId = req.user.id;
+  const userFolder = `/home/aakarshanbasubhardwaj/storage/${userId}`;
 
-app.post('/upload', upload.array('files', 10), (req, res) => {
-  // res.send('Files uploaded successfully!');
-  res.status(200).json({ message: 'Files uploaded successfully!' });
+  const categories = ['photos', 'videos', 'audio', 'documents', 'others'];
+  let fileCounts = {
+    photos: 0,
+    videos: 0,
+    audio: 0,
+    documents: 0,
+    others: 0
+  };
+
+  categories.forEach((category) => {
+    const categoryPath = path.join(userFolder, category);
+    
+    if (fs.existsSync(categoryPath)) {
+      const files = fs.readdirSync(categoryPath);
+      fileCounts[category] = files.length;
+    }
+  });
+  return res.status(200).json(fileCounts);
 });
 
 const getTotalDiskUsage = () => {
@@ -62,25 +133,22 @@ const getTotalDiskUsage = () => {
         return;
       }
 
-      // Parse the output of df
-      const lines = stdout.trim().split('\n').slice(1); // Ignore header line
+      const lines = stdout.trim().split('\n').slice(1);
       let totalSize = 0;
       let totalUsed = 0;
       let totalAvailable = 0;
 
       lines.forEach(line => {
         const columns = line.split(/\s+/);
-        const size = columns[1]; // Total size
-        const used = columns[2]; // Used space
-        const available = columns[3]; // Available space
+        const size = columns[1];
+        const used = columns[2];
+        const available = columns[3];
 
-        // Parse sizes (e.g., 50G, 30G) into numeric values
         totalSize += parseSize(size);
         totalUsed += parseSize(used);
         totalAvailable += parseSize(available);
       });
 
-      // Construct the final response
       resolve({
         totalSize: formatSize(totalSize),
         totalUsed: formatSize(totalUsed),
@@ -90,23 +158,19 @@ const getTotalDiskUsage = () => {
   });
 };
 
-// Helper to parse size strings like "50G", "30M" into numbers (in GB)
 const parseSize = sizeStr => {
-  const unit = sizeStr.slice(-1); // Last character (e.g., G, M)
-  const value = parseFloat(sizeStr.slice(0, -1)); // Numeric part
-  if (unit === 'G') return value; // Gigabytes
-  if (unit === 'M') return value / 1024; // Megabytes to GB
-  if (unit === 'T') return value * 1024; // Terabytes to GB
-  return 0; // Default to 0 if unrecognized
+  const unit = sizeStr.slice(-1); 
+  const value = parseFloat(sizeStr.slice(0, -1));
+  if (unit === 'G') return value; 
+  if (unit === 'M') return value / 1024; 
+  if (unit === 'T') return value * 1024; 
+  return 0; 
 };
 
-// Helper to format sizes back to human-readable strings
 const formatSize = sizeInGB => {
-  if (sizeInGB >= 1024) return `${(sizeInGB / 1024).toFixed(2)}TB`; // Terabytes
-  return `${sizeInGB.toFixed(2)}GB`; // Gigabytes
+  if (sizeInGB >= 1024) return `${(sizeInGB / 1024).toFixed(2)}TB`; 
+  return `${sizeInGB.toFixed(2)}GB`; 
 };
-
-// Example usage in an Express route
 
 app.get('/disk-usage', async (req, res) => {
   try {
@@ -123,6 +187,43 @@ app.get('/disk-usage', async (req, res) => {
   }
 });
 
+// Serve static files (images) from the user's photos folder
+app.use('/images/:userId/photos', (req, res, next) => {
+  const userId = req.params.userId;  // Get the user ID from the URL
+  const photoFolder = path.join('/home/aakarshanbasubhardwaj/storage', userId, 'photos');
+  
+  // Serve the requested file directly from the user's photo folder
+  const requestedFilePath = path.join(photoFolder, req.path.split('/').pop());
+
+  // Check if the file exists
+  if (fs.existsSync(requestedFilePath)) {
+    return res.sendFile(requestedFilePath);  // Send the image file
+  } else {
+    return res.status(404).json({ message: 'File not found' });
+  }
+});
+
+// Get list of files in the photos folder
+app.get('/get-images', (req, res) => {
+  const userId = req.user.id;  // Get the user ID
+  const userFolder = `/home/aakarshanbasubhardwaj/storage/${userId}/photos`;
+
+  if (!fs.existsSync(userFolder)) {
+    return res.status(404).json({ message: 'Photos folder not found' });
+  }
+
+  fs.readdir(userFolder, (err, files) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error reading files', error: err });
+    }
+    return res.status(200).json({ files: files });
+  });
+});
+
+app.get('/userID', (req, res) => {
+  const userId = req.user.id;  
+  return res.status(200).json(userId);
+});
 
 app.use("/auth", auth);
 

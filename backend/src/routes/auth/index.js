@@ -43,7 +43,7 @@ function isLoggedIn(req, res, next){
 };
 
 router.get('/status', (req, res) => {
-  req.user ? res.status(200).json({ authenticated: true, user: req.user }) : res.status(200).json({ authenticated: false });
+  req.user ? res.status(200).json({ authenticated: true }) : res.status(200).json({ authenticated: false });
 });
 
 router.get('/google', 
