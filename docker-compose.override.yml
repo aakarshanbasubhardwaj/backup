@@ -16,7 +16,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/basu/storage:/home/basu/storage
+      - /home/aakarshanbasubhardwaj/storage:/home/aakarshanbasubhardwaj/storage
     restart: always
     depends_on:
       - mongo

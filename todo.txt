@@ -3,14 +3,9 @@ nginx reverse proxy setup
 //TODO
 setup https instead of http
 //TODO
-retrieve and display files for each user using pagination
+debug server storage space available function
 //TODO
-files to be displayed in a categorized manner
+make the documents icon as the coresponding file type
 //TODO
-add the step in pipeline to create the storage folder under home/basu
-//TODO
-make the user folder name on server come from github secrets and .env
-//TODO
-bind the cards on homescreen to display resperctive items
-//TODO
-make all content downloadable
+add cors and google callback url in .env for dev and prod and make changes accordingly
+in the deploy.yml file and github secrets and in google cloud api

@@ -89,7 +89,7 @@
   
               <v-row class="mt-4">
                 <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" outlined style="background-color: #6663fe; color: #ffffff;" class="rounded-xl">
+                  <v-card link :to="{ path: '/' }" @click="fetch('photos')" outlined style="background-color: #6663fe; color: #ffffff;" class="rounded-xl">
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-camera</v-icon>
                       <div style="font-weight: bold;">Pictures</div>
@@ -98,7 +98,7 @@
                   </v-card>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" outlined style="background-color: #00a0b6; color: #ffffff;" class="rounded-xl">
+                  <v-card link :to="{ path: '/' }" @click="fetch('documents')"  outlined style="background-color: #00a0b6; color: #ffffff;" class="rounded-xl">
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-file-document</v-icon>
                       <div style="font-weight: bold;">Documents</div>
@@ -107,7 +107,7 @@
                   </v-card>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" outlined style="background-color: #e06c9f; color: #ffffff;" class="rounded-xl">
+                  <v-card link :to="{ path: '/' }" @click="fetch('videos')"  outlined style="background-color: #e06c9f; color: #ffffff;" class="rounded-xl">
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-movie</v-icon>
                       <div style="font-weight: bold;">Videos</div>
@@ -116,7 +116,7 @@
                   </v-card>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" outlined style="background-color: #266fd5; color: #ffffff;" class="rounded-xl">
+                  <v-card link :to="{ path: '/' }" @click="fetch('audios')"  outlined style="background-color: #266fd5; color: #ffffff;" class="rounded-xl">
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-music-note</v-icon>
                       <div style="font-weight: bold;">Audio</div>
@@ -132,19 +132,26 @@
                 </v-col>
               </v-row>
 
-              <v-row class="mt-4">
+              <v-row class="mt-4 image-container">
+                <div>
+                  <v-alert v-if="noFiles" type="error" dismissible closable>
+                    No {{ currentCategory }} found!
+                  </v-alert>
+                </div>
                 <v-col
-                  v-for="(file, index) in imageFiles"
+                  v-for="(file, index) in files"
                   :key="index"
                   class="d-flex child-flex"
-                  cols="4"
+                  cols="6" sm="4" md="4"
                 >
                   <v-img
-                    :src="`http://localhost:3000/images/${userID}/photos/${file}`"
-                    aspect-ratio="1"
+                    v-if="currentCategory === 'photos'"
+                    :src="`${baseURL}/serve/${userID}/photos/${file}`"
+                    aspect-ratio="1/1"
                     class="bg-grey-lighten-2"
                     cover
-                    :styles="{ objectFit: 'contain' }"
+                    max-height="200px"
+                    @click="openFullScreen(file)"
                   >
                     <template v-slot:placeholder>
                       <v-row
@@ -158,11 +165,116 @@
                         ></v-progress-circular>
                       </v-row>
                     </template>
+
+                    <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${file}`, file)">
+                          <v-list-item-title>Download</v-list-item-title>
+                        </v-list-item>
+
+                        <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
                   </v-img>
+                  <v-card
+                    v-else-if="currentCategory === 'documents'"
+                    class="pa-4"
+                    outlined
+                  >
+                    <v-icon size="36" color="#00a0b6">mdi-file-document</v-icon>
+                    <div>{{ file }}</div>
+                    <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${file}`, file)">
+                          <v-list-item-title>Download</v-list-item-title>
+                        </v-list-item>
+
+                        <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                  </v-card>
+
+                  <!-- Display Videos -->
+                  <v-card
+                    v-else-if="currentCategory === 'videos'"
+                    class="pa-4"
+                    outlined
+                  >
+                    <video controls width="100%">
+                      <source :src="`${baseURL}/${userID}/videos/${file}`" />
+                    </video>
+                    <div>{{ file }}</div>
+                    <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${file}`, file)">
+                          <v-list-item-title>Download</v-list-item-title>
+                        </v-list-item>
+
+                        <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                  </v-card>
+
+                  <!-- Display Audio -->
+                  <v-card
+                    v-else-if="currentCategory === 'audios'"
+                    class="pa-4"
+                    outlined
+                  >
+                    <audio controls>
+                      <source :src="`${baseURL}/${userID}/audios/${file}`" />
+                    </audio>
+                    <div>{{ file }}</div>
+                    <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audios/${file}`, file)">
+                          <v-list-item-title>Download</v-list-item-title>
+                        </v-list-item>
+
+                        <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item>
+                      </v-list>
+                    </v-menu>
+                  </v-card>
                 </v-col>
+                <v-dialog v-model="deleteDialog" max-width="500">
+                  <v-card>
+                    <v-card-title class="headline">Are you sure you want to delete this file?</v-card-title>
+                    <v-card-actions>
+                      <v-btn color="green darken-1" text @click="deleteDialog = false">Cancel</v-btn>
+                      <v-btn color="red darken-1" text @click="confirmDelete">Delete</v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-dialog>
               </v-row>
 
-            
             </v-col>
             
             <v-col cols="12" md="4">
@@ -225,6 +337,20 @@
               </v-card>
               </v-card>
             </v-col>
+            <v-dialog v-model="dialog" max-width="90%" fullscreen hide-overlay>
+              <v-img :src="fullScreenImage" aspect-ratio="1" class="bg-transparent" />
+              <v-btn
+                icon
+                absolute
+                top
+                right
+                @click="dialog = false"
+                class="white--text"
+                size="small"
+              >
+                <v-icon>mdi-close</v-icon>
+              </v-btn>
+            </v-dialog>
           </v-row>
         </v-container>
       </v-main>
@@ -254,8 +380,15 @@ import axios from '../../plugins/axios.js';
           documents: 0,
           others: 0,
         },
-        imageFiles: [],
+        files: [],
         userID: null,
+        currentCategory: "photos",
+        dialog: false, 
+        fullScreenImage: "",
+        noFiles: false,
+        deleteDialog: false, 
+        fileToDelete: null,
+        baseURL: process.env.VUE_APP_ENV,
       };
     },
     watch: {
@@ -264,9 +397,29 @@ import axios from '../../plugins/axios.js';
       },
     },
     mounted() {
-      this.fetchDiskUsageAndFileCounts();
+      this.initialLoad();
     },
     methods: {
+      openFullScreen(file) {
+        this.fullScreenImage = `${process.env.VUE_APP_ENV}/serve/${this.userID}/photos/${file}`;
+        this.dialog = true; 
+      },
+      forceFileDownload(response, title) {
+        console.log(title)
+        const url = window.URL.createObjectURL(new Blob([response.data]))
+        const link = document.createElement('a')
+        link.href = url
+        link.setAttribute('download', title)
+        document.body.appendChild(link)
+        link.click()
+      },
+      async downloadWithAxios(url, title) {
+        await axios.get(url,{ responseType: 'arraybuffer' })
+          .then((response) => {
+            this.forceFileDownload(response, title)
+          })
+          .catch(() => console.log('error occured'))
+      },
       handleFileUpload(event) {
         this.filesToUpload = event.target.files;
       },
@@ -284,7 +437,7 @@ import axios from '../../plugins/axios.js';
     }
   
         try {
-          const response = await axios.post("http://localhost:3000/upload", formData, {
+          const response = await axios.post(`${process.env.VUE_APP_ENV}/upload`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -300,6 +453,7 @@ import axios from '../../plugins/axios.js';
               message: 'Files uploaded successfully!'
             };
             this.uploadProgress = 0;
+            this.fetchFileCounts();
           } else {
             this.filesToUpload = [];
             this.uploadStatus = {
@@ -330,7 +484,21 @@ import axios from '../../plugins/axios.js';
           console.error("Error during logout:", error);
         }
       },
-      async fetchDiskUsageAndFileCounts() {
+      
+      async initialLoad() {
+        try {
+          await Promise.all([
+            this.fetchDiskUsage(),
+            this.fetchFileCounts(),
+            this.fetchUserID(),
+            this.fetchPhotos()
+          ]);
+        } catch (err) {
+          console.error('Error fetching data:', err);
+        }
+      },
+
+      async fetchDiskUsage() {
         try {
           const response = await axios.get("/disk-usage");
           this.diskUsage = response.data.data;
@@ -342,28 +510,55 @@ import axios from '../../plugins/axios.js';
         } catch (err) {
           console.error("Error fetching disk usage:", err);
         }
+      },
 
+      async fetchFileCounts() {
         try {
           const response = await axios.get("/file-counts", { withCredentials: true });
           this.fileCounts = response.data;
         } catch (err) {
           console.error("Error fetching file counts:", err);
         }
+      },
 
+      async fetchUserID() {
         try {
           const response = await axios.get('/userID', { withCredentials: true });
           this.userID = response.data;
         } catch (err) {
           console.error('Error fetching userID:', err);
         }
+      },
 
+      async fetchPhotos() {
         try {
-          const response = await axios.get('/get-images', { withCredentials: true });
-          this.imageFiles = response.data.files; 
+          const response = await axios.get('/get/photos', { withCredentials: true });
+          if(response.data.files){
+            this.files = response.data.files; 
+          } else {
+            this.noFiles = true;
+          }
         } catch (err) {
           console.error('Error fetching images:', err);
         }
+      },
 
+      async fetch(category) {
+        try {
+          this.currentCategory = category;
+          const response = await axios.get(`/get/${category}`, { withCredentials: true });
+          if(response.data.files){
+            console.log("files");
+            this.files = response.data.files; 
+            this.noFiles = false;
+          } else {
+            console.log("no files");
+            this.files = [];
+            this.noFiles = true;
+          }
+        } catch (err) {
+          console.error('Error fetching images:', err);
+        }
       },
       
       parseSize(sizeString) {
@@ -384,23 +579,31 @@ import axios from '../../plugins/axios.js';
             return 0;
         }
       },
-    },
-    async fetchFileCount () {
-      try {
-          const response = await axios.get("/file-counts");
-          this.fileCounts = response.data.fileCounts;
+      deleteFile(file) {
+        this.fileToDelete = file; 
+        this.deleteDialog = true; 
+      },
+
+      confirmDelete() {
+        this.deleteDialog = false;
+        this.deleteConfirmedFile(this.fileToDelete); 
+      },
+      async deleteConfirmedFile(file) {
+        try {
+          const response = await axios.delete(`/delete/file/${this.userID}/${this.currentCategory}/${file}`);
+
+          if (response.status === 200) {    
+            const index = this.files.indexOf(file);
+            if (index !== -1) {
+              this.files.splice(index, 1); 
+            }
+            await this.fetchFileCounts();
+          }
         } catch (err) {
-          console.error("Error fetching file counts:", err);
+          console.error('Error deleting file:', err);
         }
+      },
     },
-    async fetchImages() {
-    try {
-      const response = await axios.get('/get-images', { withCredentials: true });
-      this.imageFiles = response.data.files;  // Store the file names in imageFiles
-    } catch (err) {
-      console.error('Error fetching images:', err);
-    }
-  }
   };
   </script>
   
@@ -408,5 +611,21 @@ import axios from '../../plugins/axios.js';
   .text-center {
     text-align: center;
   }
+  .v-dialog__overlay {
+  background-color: rgba(0, 0, 0, 0.7) !important; 
+}
+.v-dialog__content {
+  background: transparent !important;
+}
+.v-btn[absolute] {
+  position: absolute;
+  top: 16px; 
+  right: 16px; 
+  z-index: 2; 
+}
+.image-container {
+  height: 500px; 
+  overflow-y: auto; 
+}
   </style>
   

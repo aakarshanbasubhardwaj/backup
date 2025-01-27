@@ -86,7 +86,7 @@
     methods: {
       async sendLoginRequest() {
         try {
-          const res = window.location.href = "http://localhost:3000/auth/google";
+          const res = window.location.href = `${process.env.VUE_APP_ENV}/auth/google`;
           this.response = res.data;
           this.error = null;
         } catch (err) {

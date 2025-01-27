@@ -29,6 +29,7 @@ app.use((req, res, next) => {
 });
 
 const port = process.env.PORT;
+const storage_folder_path = process.env.STORAGE_FOLDER_PATH;
 
 app.get('/test', (req, res) => {
   res.send('Test successful');
@@ -36,7 +37,7 @@ app.get('/test', (req, res) => {
 
 const dynamicUpload = (req, res, next) => {
   try {
-    const userFolder = `/home/aakarshanbasubhardwaj/storage/${req.user.id}`;
+    const userFolder = `${storage_folder_path}/${req.user.id}`;
     
     if (!fs.existsSync(userFolder)) {
       fs.mkdirSync(userFolder, { recursive: true });
@@ -99,7 +100,7 @@ app.post('/upload', dynamicUpload, (req, res) => {
 
 app.get('/file-counts', (req, res) => {
   const userId = req.user.id;
-  const userFolder = `/home/aakarshanbasubhardwaj/storage/${userId}`;
+  const userFolder = `${storage_folder_path}/${userId}`;
 
   const categories = ['photos', 'videos', 'audio', 'documents', 'others'];
   let fileCounts = {
@@ -187,29 +188,30 @@ app.get('/disk-usage', async (req, res) => {
   }
 });
 
-// Serve static files (images) from the user's photos folder
-app.use('/images/:userId/photos', (req, res, next) => {
-  const userId = req.params.userId;  // Get the user ID from the URL
-  const photoFolder = path.join('/home/aakarshanbasubhardwaj/storage', userId, 'photos');
+app.use('/serve/:userId/:category', (req, res, next) => {
+  const userId = req.params.userId;
+  const category = req.params.category;
+  const categoryFolder = path.join(`${storage_folder_path}`, userId, category);
   
-  // Serve the requested file directly from the user's photo folder
-  const requestedFilePath = path.join(photoFolder, req.path.split('/').pop());
 
-  // Check if the file exists
+  const requestedFilePath = path.join(categoryFolder, req.path.split('/').pop());
+
+
   if (fs.existsSync(requestedFilePath)) {
-    return res.sendFile(requestedFilePath);  // Send the image file
+    return res.sendFile(requestedFilePath); 
   } else {
     return res.status(404).json({ message: 'File not found' });
   }
 });
 
-// Get list of files in the photos folder
-app.get('/get-images', (req, res) => {
-  const userId = req.user.id;  // Get the user ID
-  const userFolder = `/home/aakarshanbasubhardwaj/storage/${userId}/photos`;
+
+app.get('/get/:category', (req, res) => {
+  const userId = req.user.id; 
+  const category = req.params.category;
+  const userFolder = `${storage_folder_path}/${userId}/${category}`;
 
   if (!fs.existsSync(userFolder)) {
-    return res.status(404).json({ message: 'Photos folder not found' });
+    return res.status(200).json({ files: null, message: `${category} folder not found` });
   }
 
   fs.readdir(userFolder, (err, files) => {
@@ -224,6 +226,19 @@ app.get('/userID', (req, res) => {
   const userId = req.user.id;  
   return res.status(200).json(userId);
 });
+
+app.delete('/delete/file/:userId/:category/:fileName', (req, res) => {
+  const { userId, category, fileName } = req.params;
+  const filePath = `${storage_folder_path}/${userId}/${category}/${fileName}`;
+  
+  fs.unlink(filePath, (err) => {
+    if (err) {
+      return res.status(500).json({ message: 'Error deleting file', error: err });
+    }
+    res.status(200).json({ message: 'File deleted successfully' });
+  });
+});
+
 
 app.use("/auth", auth);
 

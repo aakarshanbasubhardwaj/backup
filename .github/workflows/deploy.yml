@@ -41,6 +41,7 @@ jobs:
         shell: bash
         run: |
           ssh ${{ secrets.ZEROTIER_HOST_USER }}@${{ secrets.ZEROTIER_HOST_IP }} "
+            mkdir -p /home/basu/storage &&
             mkdir -p ~/app &&
             echo 'Deploying code to ~/app' &&
             cd ~/app &&
@@ -59,6 +60,7 @@ jobs:
             SECRET=${{ secrets.SECRET }}
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
             GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            STORAGE_FOLDER_PATH=${{ secrets.STORAGE_FOLDER_PATH }}
             EOL &&
             cd .. &&
             cd frontend &&
@@ -67,6 +69,6 @@ jobs:
             EOL &&
             cd .. &&
             docker compose down &&
-            docker compose up -d --build &&
+            docker compose -f docker-compose.yml up -d --build &&
             exit
           "
