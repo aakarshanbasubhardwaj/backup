@@ -10,6 +10,7 @@ dotenv.config();
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET
 const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
 
 passport.use(new GoogleStrategy({
     clientID:     GOOGLE_CLIENT_ID,
@@ -53,7 +54,7 @@ router.get('/google',
 
 router.get('/protected', isLoggedIn, (req, res) => {
   res.set('Cache-Control', 'no-store');
-  res.redirect('http://localhost:8080/home');
+  res.redirect(`${ALLOWED_ORIGINS}/home`);
 });
 
 router.get('/loggedin',
