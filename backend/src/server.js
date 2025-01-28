@@ -26,7 +26,7 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(cors({
-  origin: process.env.ALLOWED_ORIGINS,
+  origin: process.env.ALLOWED_ORIGINS.split(','),
   credentials: true, 
 }))
 app.use((req, res, next) => {
