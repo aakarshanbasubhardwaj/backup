@@ -147,6 +147,9 @@ const getTotalDiskUsage = () => {
 
       lines.forEach(line => {
         const columns = line.split(/\s+/);
+        if (columns.length < 6) {
+          return;
+        }
         const size = columns[1];
         const used = columns[2];
         const available = columns[3];
@@ -166,13 +169,20 @@ const getTotalDiskUsage = () => {
 };
 
 const parseSize = sizeStr => {
+  if (!sizeStr || typeof sizeStr !== 'string') {
+    return 0; 
+  }
+  
   const unit = sizeStr.slice(-1); 
   const value = parseFloat(sizeStr.slice(0, -1));
+  
   if (unit === 'G') return value; 
   if (unit === 'M') return value / 1024; 
   if (unit === 'T') return value * 1024; 
-  return 0; 
+  
+  return 0;
 };
+
 
 const formatSize = sizeInGB => {
   if (sizeInGB >= 1024) return `${(sizeInGB / 1024).toFixed(2)}TB`; 
