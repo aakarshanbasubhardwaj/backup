@@ -8,3 +8,5 @@ debug server storage space available function
 make the documents icon as the coresponding file type
 //TODO
 admin pannel for adding and removing authorised users
+//TODO
+implement error logging in both frontend  and backend
