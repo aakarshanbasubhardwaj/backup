@@ -15,7 +15,13 @@ const app = express();
 app.use(session({ 
   secret: process.env.SECRET,
   resave: false,
-  saveUninitialized: true,}
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    secure: false,  
+    sameSite: 'Lax', 
+  }
+}
 ))
 app.use(passport.initialize())
 app.use(passport.session())
