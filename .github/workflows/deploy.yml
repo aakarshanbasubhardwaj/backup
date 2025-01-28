@@ -55,7 +55,7 @@ jobs:
               cd backup
             fi &&
             cd backend &&
-            cat > .env <<EOL
+            cat > .env <<EOF
             PORT=${{ secrets.PORT }}
             SECRET=${{ secrets.SECRET }}
             GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
@@ -63,12 +63,12 @@ jobs:
             STORAGE_FOLDER_PATH=${{ secrets.STORAGE_FOLDER_PATH }}
             ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
             GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
-            EOL &&
+            EOF &&
             cd .. &&
             cd frontend &&
-            cat > .env <<EOL
+            cat > .env <<EOF
             VUE_APP_ENV=${{ secrets.VUE_APP_ENV }}
-            EOL &&
+            EOF &&
             cd .. &&
             docker compose down &&
             docker compose -f docker-compose.yml up -d --build &&
