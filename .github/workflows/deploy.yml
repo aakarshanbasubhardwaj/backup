@@ -41,6 +41,7 @@ jobs:
         shell: bash
         run: |
           ssh ${{ secrets.ZEROTIER_HOST_USER }}@${{ secrets.ZEROTIER_HOST_IP }} "
+            mkdir -p /home/basu/storage &&
             mkdir -p ~/app &&
             echo 'Deploying code to ~/app' &&
             cd ~/app &&
@@ -53,7 +54,23 @@ jobs:
               git clone ${{ secrets.PROJECT_SSH_URL }} backup &&
               cd backup
             fi &&
+            cd backend &&
+            cat > .env <<EOL
+            PORT=${{ secrets.PORT }}
+            SECRET=${{ secrets.SECRET }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            STORAGE_FOLDER_PATH=${{ secrets.STORAGE_FOLDER_PATH }}
+            ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}
+            GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}
+            EOL &&
+            cd .. &&
+            cd frontend &&
+            cat > .env <<EOL
+            VUE_APP_ENV=${{ secrets.VUE_APP_ENV }}
+            EOL &&
+            cd .. &&
             docker compose down &&
-            docker compose up -d --build &&
+            docker compose -f docker-compose.yml up -d --build &&
             exit
           "

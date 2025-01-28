@@ -1,16 +1,10 @@
 //TODO
-CI/CD
-//TODO
 nginx reverse proxy setup
 //TODO
 setup https instead of http
 //TODO
-docker registry
+debug server storage space available function
 //TODO
-login using google or authenticator
+make the documents icon as the coresponding file type
 //TODO
-grouping files by users
-//TODO
-retrieve and display files for each user using pagination
-//TODO
-files to be displayed in a categorized manner
+admin pannel for adding and removing authorised users
