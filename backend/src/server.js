@@ -20,7 +20,7 @@ app.use(session({
 app.use(passport.initialize())
 app.use(passport.session())
 app.use(cors({
-  origin: 'http://localhost:8080',
+  origin: process.env.ALLOWED_ORIGINS,
   credentials: true, 
 }))
 app.use((req, res, next) => {
