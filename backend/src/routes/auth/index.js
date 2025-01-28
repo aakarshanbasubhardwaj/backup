@@ -65,7 +65,7 @@ router.get('/loggedin',
 );
 
 router.get('/failure', (req, res) => {
-  res.redirect('http://localhost:8080/login');
+  res.redirect(`${ALLOWED_ORIGINS}/login`);
 });
 
 router.get('/logout', isLoggedIn, (req, res) => {
