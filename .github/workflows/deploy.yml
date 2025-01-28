@@ -56,20 +56,20 @@ jobs:
             fi &&
             cd backend &&
             echo 'Writing environment variables to .env file' &&
-    echo 'PORT=${{ secrets.PORT }}' > .env &&
-    echo 'SECRET=${{ secrets.SECRET }}' >> .env &&
-    echo 'GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}' >> .env &&
-    echo 'GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}' >> .env &&
-    echo 'STORAGE_FOLDER_PATH=${{ secrets.STORAGE_FOLDER_PATH }}' >> .env &&
-    echo 'ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}' >> .env &&
-    echo 'GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}' >> .env &&
-    cd .. &&
-    cd frontend &&
-    echo 'VUE_APP_ENV=${{ secrets.VUE_APP_ENV }}' > .env &&
-    cd .. &&
-    echo 'Stopping existing containers' &&
-    docker compose down &&
-    echo 'Starting and rebuilding containers' &&
-    docker compose -f docker-compose.yml up -d --build &&
-    exit
-  "
+            echo 'PORT=${{ secrets.PORT }}' > .env &&
+            echo 'SECRET=${{ secrets.SECRET }}' >> .env &&
+            echo 'GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}' >> .env &&
+            echo 'GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}' >> .env &&
+            echo 'STORAGE_FOLDER_PATH=${{ secrets.STORAGE_FOLDER_PATH }}' >> .env &&
+            echo 'ALLOWED_ORIGINS=${{ secrets.ALLOWED_ORIGINS }}' >> .env &&
+            echo 'GOOGLE_CALLBACK_URL=${{ secrets.GOOGLE_CALLBACK_URL }}' >> .env &&
+            cd .. &&
+            cd frontend &&
+            echo 'VUE_APP_ENV=${{ secrets.VUE_APP_ENV }}' > .env &&
+            cd .. &&
+            echo 'Stopping existing containers' &&
+            docker compose down &&
+            echo 'Starting and rebuilding containers' &&
+            docker compose -f docker-compose.yml up -d --build &&
+            exit
+          "
