@@ -3,6 +3,8 @@ nginx reverse proxy setup
 //TODO
 setup https instead of http
 //TODO
+add documentation of every process and feature available in the application
+//TODO
 debug server storage space available function
 //TODO
 make the documents icon as the coresponding file type
@@ -10,3 +12,39 @@ make the documents icon as the coresponding file type
 admin pannel for adding and removing authorised users
 //TODO
 implement error logging in both frontend  and backend
+//TODO
+add no ip link in login form and navbar
+//TODO
+dockerfile for dev and prod frontend
+//TODO
+fix file layouts for docs videos and audios
+//TODO
+add a loader for logout and login
+//TODO
+improve login page
+//TODO
+zero tier icon and font size mismatch
+//TODO
+reject people from loggin in if they are not in the allowed list via admin pannel
+if rejected redirect to request access from admin page 
+//TODO
+add admin login redirect in login page
+//TODO
+add 2FA using google authenticator
+//TODO
+filenames of stored files to be original name
+//TODO
+implement search for files using file names
+//TODO
+a filter view to view file by month uploaded 
+//TODO
+extract metadata from images to allow for search and filter via image metadata like location
+//TODO
+while uploading store the file metadata like location, date taken, uplpoaded on, filepath
+etc. for this every user should have their own collection in mongodb based on their user id.
+//TODO
+whenever switching between category cards the previous category files are visible.
+set the files array to blank and display a loader to indicate fresh file fetch.
+display error messages in case no files found correctly
+//TODO
+provide zerotier functionaity within the application
