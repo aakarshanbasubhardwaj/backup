@@ -7,7 +7,6 @@
     <v-card class="login-card" elevation="10">
       <img src="/images/logoapp.png" alt="Logo" class="card-logo" />
       
-      <!-- Updated Google Login Button with sendLoginRequest -->
       <v-btn class="google-login" block @click="sendLoginRequest">
         <img src="/images/googlelogo.png" alt="Google Logo" class="google-logo" />
         <span>Login with Google</span>
