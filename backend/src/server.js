@@ -80,7 +80,7 @@ const dynamicUpload = (req, res, next) => {
         cb(null, categoryPath);  
       },
       filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname));  
+        cb(null, `${Date.now()}-${file.originalname}`);  
       }
     });
 
@@ -234,7 +234,14 @@ app.get('/get/:category', (req, res) => {
     if (err) {
       return res.status(500).json({ message: 'Error reading files', error: err });
     }
-    return res.status(200).json({ files: files });
+    const processedFiles = files.map(file => {
+      const originalName = file.replace(/^\d{13}-/, ''); 
+      return {
+        storedName: file,
+        originalName: originalName
+      };
+    });
+    return res.status(200).json({ files: processedFiles });
   });
 });
 
