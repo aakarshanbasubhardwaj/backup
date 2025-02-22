@@ -20,7 +20,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - /home/aakarshanbasubhardwaj/storage:/home/aakarshanbasubhardwaj/storage
+      - /home/sharada/storage:/home/sharada/storage
       - ./backend:/app
     restart: always
     depends_on:
