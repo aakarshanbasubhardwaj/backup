@@ -323,7 +323,7 @@
                 <v-card-text>
                   <div style="font-weight: bold;">Your storage</div><br/>
                   <div style="color: #111111; margin-bottom: 5px;">
-                    {{ diskUsage.totalUsed }} of {{ diskUsage.totalSize }} used
+                    {{ diskUsage.used }} of {{ diskUsage.total }} used
                   </div>
                   <v-progress-linear 
                     v-if="progress !== 0"
@@ -332,7 +332,7 @@
                     color="#266fd5" 
                     class="rounded-lg"
                   ></v-progress-linear>
-                  <small style="margin-top: 2px;">{{ progress.toFixed(2) }} % used</small>
+                  <small style="margin-top: 2px;">{{ parseInt(progress).toFixed(2) }} % used</small>
                 </v-card-text>
               </v-card>
               </v-card>
@@ -368,8 +368,8 @@ import axios from '../../plugins/axios.js';
         drawer: true,
         group: null,
         diskUsage: {
-          totalSize: "0 GB",   
-          totalUsed: "0 GB",   
+          total: "0 GB",   
+          used: "0 GB",   
         },
         progress: 0,
         error: null,
@@ -501,12 +501,11 @@ import axios from '../../plugins/axios.js';
       async fetchDiskUsage() {
         try {
           const response = await axios.get("/disk-usage");
-          this.diskUsage = response.data.data;
+          this.diskUsage.total = response.data.diskUsage.total;
+          this.diskUsage.used = response.data.diskUsage.used;
           
-          const used = this.parseSize(this.diskUsage.totalUsed);
-          const total = this.parseSize(this.diskUsage.totalSize);
+          this.progress = response.data.diskUsage.usage;
 
-          this.progress = (used / total) * 100;
         } catch (err) {
           console.error("Error fetching disk usage:", err);
         }
