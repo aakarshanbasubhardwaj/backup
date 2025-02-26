@@ -116,7 +116,7 @@
                   </v-card>
                 </v-col>
                 <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" @click="fetch('audios')"  outlined style="background-color: #266fd5; color: #ffffff;" class="rounded-xl">
+                  <v-card link :to="{ path: '/' }" @click="fetch('audio')"  outlined style="background-color: #266fd5; color: #ffffff;" class="rounded-xl">
                     <v-card-text class="text-center">
                       <v-icon class="mb-2" size="40" color="#ffffff">mdi-music-note</v-icon>
                       <div style="font-weight: bold;">Audio</div>
@@ -137,6 +137,13 @@
                   <v-alert v-if="noFiles" type="error" dismissible closable>
                     No {{ currentCategory }} found!
                   </v-alert>
+                  <v-progress-circular
+                    v-if="loading"
+                    :size="75"
+                    :width="7"
+                    color="blue"
+                    indeterminate
+                  />
                 </div>
                 <v-col
                   v-for="(file, index) in files"
@@ -146,12 +153,12 @@
                 >
                   <v-img
                     v-if="currentCategory === 'photos'"
-                    :src="`${baseURL}/serve/${userID}/photos/${file}`"
+                    :src="`${baseURL}/serve/${userID}/photos/${file.storedName}`"
                     aspect-ratio="1/1"
                     class="bg-grey-lighten-2"
                     cover
                     max-height="200px"
-                    @click="openFullScreen(file)"
+                    @click="openFullScreen(file.storedName)"
                   >
                     <template v-slot:placeholder>
                       <v-row
@@ -173,7 +180,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${file}`, file)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${file.storedName}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -188,8 +195,10 @@
                     class="pa-4"
                     outlined
                   >
-                    <v-icon size="36" color="#00a0b6">{{ getDocumentIcon(file)}}</v-icon>
-                    <div>{{ file }}</div>
+
+                    <v-icon size="36" color="#00a0b6">{{ getDocumentIcon(file.originalName)}}</v-icon>
+                    <div>{{ file.originalName }}</div>
+
                     <v-menu>
                       <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
@@ -197,7 +206,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${file}`, file)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${file.storedName}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -215,9 +224,9 @@
                     outlined
                   >
                     <video controls width="100%">
-                      <source :src="`${baseURL}/${userID}/videos/${file}`" />
+                      <source :src="`${baseURL}/${userID}/videos/${file.storedName}`" />
                     </video>
-                    <div>{{ file }}</div>
+                    <div>{{ file.originalName }}</div>
                     <v-menu>
                       <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
@@ -225,7 +234,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${file}`, file)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${file.storedName}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -238,14 +247,14 @@
 
                   <!-- Display Audio -->
                   <v-card
-                    v-else-if="currentCategory === 'audios'"
+                    v-else-if="currentCategory === 'audio'"
                     class="pa-4"
                     outlined
                   >
                     <audio controls>
-                      <source :src="`${baseURL}/${userID}/audios/${file}`" />
+                      <source :src="`${baseURL}/${userID}/audio/${file.storedName}`" />
                     </audio>
-                    <div>{{ file }}</div>
+                    <div>{{ file.originalName }}</div>
                     <v-menu>
                       <template v-slot:activator="{ props }">
                         <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
@@ -253,7 +262,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audios/${file}`, file)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${file.storedName}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -389,6 +398,7 @@ import axios from '../../plugins/axios.js';
         deleteDialog: false, 
         fileToDelete: null,
         baseURL: process.env.VUE_APP_ENV,
+        loading: false,
       };
     },
     watch: {
@@ -532,6 +542,7 @@ import axios from '../../plugins/axios.js';
 
       async fetchPhotos() {
         try {
+          this.loading = true;
           const response = await axios.get('/get/photos', { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
@@ -540,15 +551,18 @@ import axios from '../../plugins/axios.js';
           }
         } catch (err) {
           console.error('Error fetching images:', err);
+        }finally {
+          this.loading = false;
         }
       },
 
       async fetch(category) {
         try {
+          this.loading = true;
           this.currentCategory = category;
+          this.files = [];
           const response = await axios.get(`/get/${category}`, { withCredentials: true });
           if(response.data.files){
-            console.log("files");
             this.files = response.data.files; 
             this.noFiles = false;
           } else {
@@ -558,6 +572,8 @@ import axios from '../../plugins/axios.js';
           }
         } catch (err) {
           console.error('Error fetching images:', err);
+        } finally {
+          this.loading = false;
         }
       },
       
@@ -590,7 +606,7 @@ import axios from '../../plugins/axios.js';
       },
       async deleteConfirmedFile(file) {
         try {
-          const response = await axios.delete(`/delete/file/${this.userID}/${this.currentCategory}/${file}`);
+          const response = await axios.delete(`/delete/file/${this.userID}/${this.currentCategory}/${file.storedName}`);
 
           if (response.status === 200) {    
             const index = this.files.indexOf(file);
