@@ -137,6 +137,13 @@
                   <v-alert v-if="noFiles" type="error" dismissible closable>
                     No {{ currentCategory }} found!
                   </v-alert>
+                  <v-progress-circular
+                    v-if="loading"
+                    :size="75"
+                    :width="7"
+                    color="blue"
+                    indeterminate
+                  />
                 </div>
                 <v-col
                   v-for="(file, index) in files"
@@ -389,6 +396,7 @@ import axios from '../../plugins/axios.js';
         deleteDialog: false, 
         fileToDelete: null,
         baseURL: process.env.VUE_APP_ENV,
+        loading: false,
       };
     },
     watch: {
@@ -532,6 +540,7 @@ import axios from '../../plugins/axios.js';
 
       async fetchPhotos() {
         try {
+          this.loading = true;
           const response = await axios.get('/get/photos', { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
@@ -540,12 +549,16 @@ import axios from '../../plugins/axios.js';
           }
         } catch (err) {
           console.error('Error fetching images:', err);
+        }finally {
+          this.loading = false;
         }
       },
 
       async fetch(category) {
         try {
+          this.loading = true;
           this.currentCategory = category;
+          this.files = [];
           const response = await axios.get(`/get/${category}`, { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
@@ -557,6 +570,8 @@ import axios from '../../plugins/axios.js';
           }
         } catch (err) {
           console.error('Error fetching images:', err);
+        } finally {
+          this.loading = false;
         }
       },
       
