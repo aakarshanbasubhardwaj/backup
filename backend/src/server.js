@@ -59,7 +59,7 @@ const dynamicUpload = (req, res, next) => {
         return 'videos';
       } else if (['.mp3', '.wav', '.ogg', '.flac', '.aac', '.m4a', '.wma', '.alac', '.aiff', '.ape', '.opus', '.midi', '.mka'].includes(ext)) {
         return 'audio';
-      } else if (['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.rtf', '.csv', '.epub', '.mobi', '.chm', '.xml', '.json', '.html', '.htm', '.tex', '.yml', '.md'].includes(ext)) {
+      } else if (['.pdf', '.txt', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.odt', '.ods', '.odp', '.csv', '.xml', '.json', '.html', '.htm', '.tex', '.yml', '.md', '.js'].includes(ext)) {
         return 'documents';
       } else {
         return 'others';

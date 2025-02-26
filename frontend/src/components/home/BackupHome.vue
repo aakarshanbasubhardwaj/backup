@@ -188,7 +188,7 @@
                     class="pa-4"
                     outlined
                   >
-                    <v-icon size="36" color="#00a0b6">mdi-file-document</v-icon>
+                    <v-icon size="36" color="#00a0b6">{{ getDocumentIcon(file)}}</v-icon>
                     <div>{{ file }}</div>
                     <v-menu>
                       <template v-slot:activator="{ props }">
@@ -602,6 +602,33 @@ import axios from '../../plugins/axios.js';
         } catch (err) {
           console.error('Error deleting file:', err);
         }
+      },
+      getDocumentIcon(fileName) {
+        const extension = fileName.split('.').pop().toLowerCase();
+        const icons = {
+          pdf: "mdi-file-pdf",
+          txt: "mdi-file-document-outline",
+          doc: "mdi-file-word",
+          docx: "mdi-file-word",
+          xls: "mdi-file-excel",
+          xlsx: "mdi-file-excel",
+          ppt: "mdi-file-powerpoint",
+          pptx: "mdi-file-powerpoint",
+          odt: "mdi-file-document",
+          ods: "mdi-file-table",
+          odp: "mdi-file-presentation-box",
+          csv: "mdi-file-delimited",
+          xml: "mdi-xml",
+          json: "mdi-code-json",
+          html: "mdi-language-html5",
+          htm: "mdi-language-html5",
+          tex: "mdi-file-document-outline",
+          yml: "mdi-file-code",
+          md: "mdi-language-markdown",
+          js: "mdi-language-javascript"
+        };
+
+        return icons[extension] || "mdi-file-document";
       },
     },
   };
