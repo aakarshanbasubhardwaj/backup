@@ -569,6 +569,7 @@ import axios from '../../plugins/axios.js';
           const response = await axios.get('/get/photos', { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
+            this.currentCategory = 'photos'
           } else {
             this.noFiles = true;
           }
