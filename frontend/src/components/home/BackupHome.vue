@@ -47,19 +47,6 @@
         </v-list>
         
         <template v-slot:append>
-          
-          <v-list-item style="color: #FFB354 !important; display: flex; align-items: center;">
-            <v-icon size="30" left class="mr-5" icon="mdi-open-in-new"></v-icon>
-            <a
-            class="text-blue text-decoration-none"
-            href="https://accounts.zerotier.com/realms/zerotier/protocol/openid-connect/auth?client_id=zt-central&redirect_uri=https%3A%2F%2Fmy.zerotier.com%2Fauth%2Fcallback&response_type=code&scope=openid+profile+email+offline_access&state=b77fa9c6931a4307a44008534e7e4c6c&code_challenge=QW40uJ08L3MfH-Yir8NoSqu26n8TcXhPnO2-WF_RAtw&code_challenge_method=S256&response_mode=query"
-            rel="noopener noreferrer"
-            target="_blank"
-            style="color: #FFB354 !important;"
-          >
-          <span>ZeroTier</span> 
-          </a>
-          </v-list-item>
           <v-list-item style="margin-bottom: 2vh;">
             <v-btn @click="submitLogout" block variant="flat" style="background-color: #ffffff; color: #06367a;">
               Logout
