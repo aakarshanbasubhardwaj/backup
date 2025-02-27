@@ -204,13 +204,14 @@ app.get('/disk-usage', async (req, res) => {
   }
 });
 
-app.use('/serve/:userId/:category', (req, res, next) => {
+app.use('/serve/:userId/:category/*', (req, res, next) => {
   const userId = req.params.userId;
   const category = req.params.category;
+  const fileName = decodeURIComponent(req.params[0]);
   const categoryFolder = path.join(`${storage_folder_path}`, userId, category);
   
 
-  const requestedFilePath = path.join(categoryFolder, req.path.split('/').pop());
+  const requestedFilePath = path.join(categoryFolder, fileName);
 
 
   if (fs.existsSync(requestedFilePath)) {
@@ -275,7 +276,8 @@ const getFilesRecursively = (dirPath, query) => {
       matchingFiles = matchingFiles.concat(getFilesRecursively(itemPath, query));
     } else {
       if (item.toLowerCase().includes(query.toLowerCase())) {
-        matchingFiles.push({ name: item });
+        const folderName = path.basename(path.dirname(itemPath));
+        matchingFiles.push({ name: item, folder: folderName });
       }
     }
   });
@@ -297,7 +299,8 @@ app.get('/search', (req, res) => {
       const originalName = file.name.replace(/^\d{13}-/, ''); 
       return {
         storedName: file.name,
-        originalName: originalName
+        originalName: originalName,
+        folder: file.folder
       };
     });
     res.status(200).json(processedFiles);

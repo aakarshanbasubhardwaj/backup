@@ -169,7 +169,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -195,7 +195,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -223,7 +223,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -251,7 +251,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -278,7 +278,22 @@
                   <v-list>
                     <v-list-item v-for="file in searchFiles" :key="file._id">
                         <v-list-item-title>{{ file.originalName }}</v-list-item-title>
-                        <v-btn @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${file.storedName}`, file.storedName)">Download</v-btn>
+                        <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/${file.folder}/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                          <v-list-item-title>Download</v-list-item-title>
+                      </v-list-item>
+
+                        <!-- <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item> -->
+                      </v-list>
+                    </v-menu>
                     </v-list-item>
                   </v-list>
                 </v-col>
