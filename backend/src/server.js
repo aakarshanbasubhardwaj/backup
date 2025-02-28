@@ -204,13 +204,14 @@ app.get('/disk-usage', async (req, res) => {
   }
 });
 
-app.use('/serve/:userId/:category', (req, res, next) => {
+app.use('/serve/:userId/:category/*', (req, res, next) => {
   const userId = req.params.userId;
   const category = req.params.category;
+  const fileName = decodeURIComponent(req.params[0]);
   const categoryFolder = path.join(`${storage_folder_path}`, userId, category);
   
 
-  const requestedFilePath = path.join(categoryFolder, req.path.split('/').pop());
+  const requestedFilePath = path.join(categoryFolder, fileName);
 
 
   if (fs.existsSync(requestedFilePath)) {
@@ -262,6 +263,52 @@ app.delete('/delete/file/:userId/:category/:fileName', (req, res) => {
   });
 });
 
+const getFilesRecursively = (dirPath, query) => {
+  let matchingFiles = [];
+
+  const filesAndDirs = fs.readdirSync(dirPath);
+
+  filesAndDirs.forEach(item => {
+    const itemPath = path.join(dirPath, item);
+
+    const stats = fs.statSync(itemPath);
+    if (stats.isDirectory()) {
+      matchingFiles = matchingFiles.concat(getFilesRecursively(itemPath, query));
+    } else {
+      if (item.toLowerCase().includes(query.toLowerCase())) {
+        const folderName = path.basename(path.dirname(itemPath));
+        matchingFiles.push({ name: item, folder: folderName });
+      }
+    }
+  });
+
+  return matchingFiles;
+};
+
+app.get('/search', (req, res) => {
+  const query = req.query.query;
+  const storageDir = `${storage_folder_path}/${req.user.id}`;
+  try {
+    const matchingFiles = getFilesRecursively(storageDir, query);
+
+    if (matchingFiles.length === 0) {
+      return res.status(404).json({ message: 'No files found' });
+    }
+
+    const processedFiles = matchingFiles.map(file => {
+      const originalName = file.name.replace(/^\d{13}-/, ''); 
+      return {
+        storedName: file.name,
+        originalName: originalName,
+        folder: file.folder
+      };
+    });
+    res.status(200).json(processedFiles);
+  } catch (error) {
+    console.error("Error searching for files:", error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
 
 app.use("/auth", auth);
 

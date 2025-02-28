@@ -65,6 +65,8 @@
                 hide-details
                 prepend-inner-icon="mdi-magnify"
                 variant="solo"
+                v-model="searchQuery"
+                @input="handleSearch"
                 ></v-text-field>
                </v-card>
               
@@ -115,11 +117,11 @@
 
               <v-row class="mt-4">
                 <v-col cols="12" sm="6" md="3">
-                  <div style="font-weight: bold; font-size: larger; color: #06367a;">Files</div>
+                  <div style="font-weight: bold; font-size: larger; color: #06367a;">{{ filesHeader }}</div>
                 </v-col>
               </v-row>
 
-              <v-row class="mt-4 image-container">
+              <v-row class="mt-4 image-container" v-if="!searchQuery">
                 <div>
                   <v-alert v-if="noFiles" type="error" dismissible closable>
                     No {{ currentCategory }} found!
@@ -167,7 +169,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -193,7 +195,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -221,7 +223,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -249,7 +251,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${file.storedName}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -270,6 +272,37 @@
                   </v-card>
                 </v-dialog>
               </v-row>
+
+              <v-row v-else>
+                <v-col v-if="searchFiles.length">
+                  <v-list>
+                    <v-list-item v-for="file in searchFiles" :key="file._id">
+                        <v-list-item-title>{{ file.originalName }}</v-list-item-title>
+                        <v-menu>
+                      <template v-slot:activator="{ props }">
+                        <v-btn color="white" icon="mdi-dots-vertical" variant="text" v-bind="props" @click.stop
+                        style="position: absolute; top: 10px; right: 10px; background-color: rgba(0, 0, 0, 0.5);"></v-btn>
+                      </template>
+
+                      <v-list>
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/${file.folder}/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                          <v-list-item-title>Download</v-list-item-title>
+                      </v-list-item>
+
+                        <!-- <v-list-item @click="deleteFile(file)">
+                          <v-list-item-title>Delete</v-list-item-title>
+                        </v-list-item> -->
+                      </v-list>
+                    </v-menu>
+                    </v-list-item>
+                  </v-list>
+                </v-col>
+                <v-col v-else>
+                  <span>No matching files found.</span>
+                </v-col>
+              </v-row>
+
+              
 
             </v-col>
             
@@ -386,6 +419,9 @@ import axios from '../../plugins/axios.js';
         fileToDelete: null,
         baseURL: process.env.VUE_APP_ENV,
         loading: false,
+        searchQuery: '',
+        searchFiles: [],
+        filesHeader: 'Files',
       };
     },
     watch: {
@@ -533,6 +569,7 @@ import axios from '../../plugins/axios.js';
           const response = await axios.get('/get/photos', { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
+            this.currentCategory = 'photos'
           } else {
             this.noFiles = true;
           }
@@ -548,6 +585,9 @@ import axios from '../../plugins/axios.js';
           this.loading = true;
           this.currentCategory = category;
           this.files = [];
+          this.searchFiles = []
+          this.searchQuery = ''
+          this.filesHeader = 'Files'
           const response = await axios.get(`/get/${category}`, { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
@@ -632,6 +672,30 @@ import axios from '../../plugins/axios.js';
         };
 
         return icons[extension] || "mdi-file-document";
+      },
+      async handleSearch() {
+        try {
+          this.loading = true;
+          this.searchFiles = [];
+          this.files = [];
+          this.filesHeader = 'Search Results'
+          if (this.searchQuery.trim() !== '') {
+            try {
+              const response = await axios.get(`/search?query=${this.searchQuery}`, { withCredentials: true });
+              this.searchFiles = response.data;
+            } catch (error) {
+              console.error("Error searching for files:", error);
+            }
+          } else {
+            this.searchFiles = [];
+            this.filesHeader = 'Files'
+            this.fetchPhotos();
+          }
+        } catch (error) {
+          console.log(error);
+        } finally {
+          this.loading = false;
+        }
       },
     },
   };
