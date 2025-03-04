@@ -142,7 +142,7 @@
                 >
                   <v-img
                     v-if="currentCategory === 'photos'"
-                    :src="`${baseURL}/serve/${userID}/photos/${file.storedName}`"
+                    :src="`${baseURL}/fileServer/serve/${userID}/photos/${file.storedName}`"
                     aspect-ratio="1/1"
                     class="bg-grey-lighten-2"
                     cover
@@ -169,7 +169,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/photos/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/fileServer/serve/${userID}/photos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -195,7 +195,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/documents/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/fileServer/serve/${userID}/documents/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -223,7 +223,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/videos/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/fileServer/serve/${userID}/videos/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -251,7 +251,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/audio/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/fileServer/serve/${userID}/audio/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                         </v-list-item>
 
@@ -285,7 +285,7 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="downloadWithAxios(`${baseURL}/serve/${userID}/${file.folder}/${encodeURIComponent(file.storedName)}`, file.storedName)">
+                        <v-list-item @click="downloadWithAxios(`${baseURL}/fileServer/serve/${userID}/${file.folder}/${encodeURIComponent(file.storedName)}`, file.storedName)">
                           <v-list-item-title>Download</v-list-item-title>
                       </v-list-item>
 
@@ -434,7 +434,7 @@ import axios from '../../plugins/axios.js';
     },
     methods: {
       openFullScreen(file) {
-        this.fullScreenImage = `${process.env.VUE_APP_ENV}/serve/${this.userID}/photos/${file}`;
+        this.fullScreenImage = `${process.env.VUE_APP_ENV}/fileServer/serve/${this.userID}/photos/${file}`;
         this.dialog = true; 
       },
       forceFileDownload(response, title) {
@@ -470,7 +470,7 @@ import axios from '../../plugins/axios.js';
     }
   
         try {
-          const response = await axios.post(`${process.env.VUE_APP_ENV}/upload`, formData, {
+          const response = await axios.post(`${process.env.VUE_APP_ENV}/upload/uploadFiles`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
@@ -533,7 +533,7 @@ import axios from '../../plugins/axios.js';
 
       async fetchDiskUsage() {
         try {
-          const response = await axios.get("/disk-usage");
+          const response = await axios.get("/usage/disk-usage");
           this.diskUsage = response.data.data;
           
           const used = this.parseSize(this.diskUsage.totalUsed);
@@ -547,7 +547,7 @@ import axios from '../../plugins/axios.js';
 
       async fetchFileCounts() {
         try {
-          const response = await axios.get("/file-counts", { withCredentials: true });
+          const response = await axios.get("fileServer/file-counts", { withCredentials: true });
           this.fileCounts = response.data;
         } catch (err) {
           console.error("Error fetching file counts:", err);
@@ -556,7 +556,7 @@ import axios from '../../plugins/axios.js';
 
       async fetchUserID() {
         try {
-          const response = await axios.get('/userID', { withCredentials: true });
+          const response = await axios.get('/fileServer/userID', { withCredentials: true });
           this.userID = response.data;
         } catch (err) {
           console.error('Error fetching userID:', err);
@@ -566,7 +566,7 @@ import axios from '../../plugins/axios.js';
       async fetchPhotos() {
         try {
           this.loading = true;
-          const response = await axios.get('/get/photos', { withCredentials: true });
+          const response = await axios.get('/fileServer/get/photos', { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
             this.currentCategory = 'photos'
@@ -588,7 +588,7 @@ import axios from '../../plugins/axios.js';
           this.searchFiles = []
           this.searchQuery = ''
           this.filesHeader = 'Files'
-          const response = await axios.get(`/get/${category}`, { withCredentials: true });
+          const response = await axios.get(`/fileServer/get/${category}`, { withCredentials: true });
           if(response.data.files){
             this.files = response.data.files; 
             this.noFiles = false;
@@ -633,7 +633,7 @@ import axios from '../../plugins/axios.js';
       },
       async deleteConfirmedFile(file) {
         try {
-          const response = await axios.delete(`/delete/file/${this.userID}/${this.currentCategory}/${file.storedName}`);
+          const response = await axios.delete(`/fileServer/delete/file/${this.userID}/${this.currentCategory}/${file.storedName}`);
 
           if (response.status === 200) {    
             const index = this.files.indexOf(file);
@@ -681,7 +681,7 @@ import axios from '../../plugins/axios.js';
           this.filesHeader = 'Search Results'
           if (this.searchQuery.trim() !== '') {
             try {
-              const response = await axios.get(`/search?query=${this.searchQuery}`, { withCredentials: true });
+              const response = await axios.get(`/fileServer/search?query=${this.searchQuery}`, { withCredentials: true });
               this.searchFiles = response.data;
             } catch (error) {
               console.error("Error searching for files:", error);
