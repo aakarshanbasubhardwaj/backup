@@ -1,119 +1,27 @@
 <template>
     <v-app>
-      <v-app-bar
-        color="#06367a"
-        prominent
-        v-if="$vuetify.display.mdAndDown"
-        style="position: fixed;"
-      >
-        <v-app-bar-nav-icon variant="text" @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      </v-app-bar>
-      <v-navigation-drawer 
-        app 
-        color="#06367a" 
-        v-model="drawer"
-        :location="$vuetify.display.mobile ? 'left' : 'left'"
-        height="100%"
-        style="position: fixed; display: flex; flex-direction: column; justify-content: space-between;"
-
-        >
-        <v-list>
-          <v-list-item link :to="{ path: '/home' }" style="display: flex; align-items: center;">
-            <v-avatar class="mx-auto mb-4" size="80" >
-              <v-icon size="50" color="#ffffff">mdi-server</v-icon>
-            </v-avatar>
-            <span>backup</span>
-          </v-list-item>
-          <v-list-item link :to="{ path: '/' }" style="display: flex; align-items: center;">
-            <v-icon size="30" left class="mr-5">mdi-account-lock</v-icon>
-            <span>My Cloud</span>
-          </v-list-item>
-          <v-list-item link :to="{ path: '/' }" style="display: flex; align-items: center;">
-            <v-icon size="30" left class="mr-5">mdi-camera</v-icon>
-              <span>Pictures</span>
-          </v-list-item>
-          <v-list-item link :to="{ path: '/' }" style="display: flex; align-items: center;">
-            <v-icon size="30" left class="mr-5">mdi-movie</v-icon>
-              <span>Videos</span>
-          </v-list-item>
-          <v-list-item link :to="{ path: '/' }" style="display: flex; align-items: center;">
-              <v-icon size="30" left class="mr-5">mdi-file-document</v-icon>
-              <span>Documents</span>
-          </v-list-item>
-          <v-list-item link :to="{ path: '/' }" style="display: flex; align-items: center;">
-            <v-icon size="30" left class="mr-5">mdi-music-note</v-icon>
-              <span>Audio</span>
-          </v-list-item>
-        </v-list>
-        
-        <template v-slot:append>
-          <v-list-item style="margin-bottom: 2vh;">
-            <v-btn @click="submitLogout" block variant="flat" style="background-color: #ffffff; color: #06367a;">
-              Logout
-            </v-btn>
-          </v-list-item>
-          </template>
-      </v-navigation-drawer>
+      <AppDrawer />
       <v-main style="background-color: #ebf2fc;">
         <v-container>
           <v-row>
             <v-col cols="12" md="8">
-               <v-card style="height: auto;" class="rounded-pill">
-                <v-text-field
-                label="Search"
-                clearable
-                hide-details
-                prepend-inner-icon="mdi-magnify"
-                variant="solo"
-                v-model="searchQuery"
-                @input="handleSearch"
-                ></v-text-field>
-               </v-card>
-              
-              <v-row class="mt-4">
-                <v-col cols="12" sm="6" md="3">
-                  <div style="font-weight: bold; font-size: larger; color: #06367a;">Categories</div>
-                </v-col>
-              </v-row>
-  
-              <v-row class="mt-4">
-                <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" @click="fetch('photos')" outlined style="background-color: #6663fe; color: #ffffff;" class="rounded-xl">
-                    <v-card-text class="text-center">
-                      <v-icon class="mb-2" size="40" color="#ffffff">mdi-camera</v-icon>
-                      <div style="font-weight: bold;">Pictures</div>
-                      <small v-if="fileCounts && fileCounts.photos !== undefined" style="color: #ffffff;">{{ fileCounts.photos }} files</small>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" @click="fetch('documents')"  outlined style="background-color: #00a0b6; color: #ffffff;" class="rounded-xl">
-                    <v-card-text class="text-center">
-                      <v-icon class="mb-2" size="40" color="#ffffff">mdi-file-document</v-icon>
-                      <div style="font-weight: bold;">Documents</div>
-                      <small v-if="fileCounts && fileCounts.documents !== undefined" style="color: #ffffff;">{{ fileCounts.documents }} files</small>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" @click="fetch('videos')"  outlined style="background-color: #e06c9f; color: #ffffff;" class="rounded-xl">
-                    <v-card-text class="text-center">
-                      <v-icon class="mb-2" size="40" color="#ffffff">mdi-movie</v-icon>
-                      <div style="font-weight: bold;">Videos</div>
-                      <small v-if="fileCounts && fileCounts.videos !== undefined" style="color: #ffffff;">{{ fileCounts.videos }} files</small>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-                <v-col cols="12" sm="6" md="3" >
-                  <v-card link :to="{ path: '/' }" @click="fetch('audio')"  outlined style="background-color: #266fd5; color: #ffffff;" class="rounded-xl">
-                    <v-card-text class="text-center">
-                      <v-icon class="mb-2" size="40" color="#ffffff">mdi-music-note</v-icon>
-                      <div style="font-weight: bold;">Audio</div>
-                      <small v-if="fileCounts && fileCounts.audio !== undefined" style="color: #ffffff;">{{ fileCounts.audio }} files</small>
-                    </v-card-text>
-                  </v-card>
-                </v-col>
-              </v-row>
+              <SearchBox
+                :fetchPhotos="fetchPhotos"
+                @update-loading="updateLoading"
+                @update-files="updateFiles"
+                @update-searchFiles="updateSearchFiles"
+                @update-filesHeader="updateFilesHeader"
+              />              
+              <FileCategories  
+                :fileCounts="fileCounts"
+                @update-loading="updateLoading"
+                @update-currentCategory="updateCurrentCategory"
+                @update-files="updateFiles"
+                @update-searchFiles="updateSearchFiles"
+                @update-filesHeader="updateFilesHeader"
+                @update-noFiles="updateNoFiles"
+
+              />
 
               <v-row class="mt-4">
                 <v-col cols="12" sm="6" md="3">
@@ -121,7 +29,7 @@
                 </v-col>
               </v-row>
 
-              <v-row class="mt-4 image-container" v-if="!searchQuery">
+              <v-row class="mt-4 image-container" v-if="!searchFiles.length">
                 <div>
                   <v-alert v-if="noFiles" type="error" dismissible closable>
                     No {{ currentCategory }} found!
@@ -308,62 +216,12 @@
             
             <v-col cols="12" md="4">
               <v-card
-              style="background-color: #ffffff; height: auto; padding: 15px;" class="mb-4 rounded-md">
-                <v-card outlined style="background-color: #f5f9fd; height: 50vh; display: flex; align-items: center;" class="mb-4 text-center rounded-md">
-                <v-card-text>
-                  <v-icon size="40" class="mb-2" color="#266fd5" @click="triggerFileInput">mdi-file-upload</v-icon>
-                  <v-file-input
-                    v-model="filesToUpload"
-                    label="Select files to upload"
-                    multiple
-                    outlined
-                    v-show="false"
-                    ref="fileInput"
-                    class="mb-4"
-                  >
-                  </v-file-input>
-                  <div>
-                    <v-btn
-                      color="#266fd5"
-                      @click="uploadFiles"
-                      :disabled="!filesToUpload.length"
-                      class="mb-4"
-                      variant="flat"
-                      >
-                      Add new files
-                    </v-btn>
-                    <v-progress-linear
-                      v-if="uploadProgress > 0"
-                      :model-value="uploadProgress"
-                      height="10"
-                      color="#266fd5"
-                      class="mt-4"
-                      striped
-                    ></v-progress-linear>
-                  </div>
-                  <div>
-                    <v-alert v-if="uploadStatus" :type="uploadStatus.type" dismissible closable>
-                      {{ uploadStatus.message }}
-                    </v-alert>
-                  </div>
-                </v-card-text>
-              </v-card>
-              <v-card outlined style="background-color: #f5f9fd; color: #06367a;" class="mb-4 rounded-md">
-                <v-card-text>
-                  <div style="font-weight: bold;">Your storage</div><br/>
-                  <div style="color: #111111; margin-bottom: 5px;">
-                    {{ diskUsage.totalUsed }} of {{ diskUsage.totalSize }} used
-                  </div>
-                  <v-progress-linear 
-                    v-if="progress !== 0"
-                    :model-value="progress" 
-                    :height="10" 
-                    color="#266fd5" 
-                    class="rounded-lg"
-                  ></v-progress-linear>
-                  <small style="margin-top: 2px;">{{ progress.toFixed(2) }} % used</small>
-                </v-card-text>
-              </v-card>
+                style="background-color: #ffffff; height: auto; padding: 15px;" class="mb-4 rounded-md">
+                <FileUpload
+                  :fetchFileCounts="fetchFileCounts"
+                />
+                <StorageSpace/>
+                
               </v-card>
             </v-col>
             <v-dialog v-model="dialog" max-width="90%" fullscreen hide-overlay>
@@ -388,19 +246,22 @@
   
   <script>
 import axios from '../../plugins/axios.js';
+import AppDrawer from './AppDrawer.vue';
+import FileCategories from './FileCategories.vue';
+import SearchBox from './SearchBox.vue';
+import FileUpload from './FileUpload.vue';
+import StorageSpace from './StorageSpace.vue';
   export default {
+    components: {
+      AppDrawer,
+      FileCategories,
+      SearchBox,
+      FileUpload,
+      StorageSpace,
+    },
     data() {
       return {
-        filesToUpload: [],
-        uploadStatus: null,
-        uploadProgress: 0,
-        drawer: true,
         group: null,
-        diskUsage: {
-          totalSize: "0 GB",   
-          totalUsed: "0 GB",   
-        },
-        progress: 0,
         error: null,
         fileCounts: {
           photos: 0,
@@ -419,7 +280,6 @@ import axios from '../../plugins/axios.js';
         fileToDelete: null,
         baseURL: process.env.VUE_APP_ENV,
         loading: false,
-        searchQuery: '',
         searchFiles: [],
         filesHeader: 'Files',
       };
@@ -453,75 +313,13 @@ import axios from '../../plugins/axios.js';
           })
           .catch(() => console.log('error occured'))
       },
-      handleFileUpload(event) {
-        this.filesToUpload = event.target.files;
-      },
-      triggerFileInput() {
-        this.$refs.fileInput.$el.querySelector('input[type="file"]').click();
-      },
-      async uploadFiles() {
-        this.uploadStatus = null;
-        const formData = new FormData();
-        for (const file of this.filesToUpload) {
-          formData.append('files', file);
-        }
-        for (let key of formData.keys()) {
-      console.log('FormData Key:', key, 'Value:', formData.get(key));
-    }
-  
-        try {
-          const response = await axios.post(`${process.env.VUE_APP_ENV}/upload/uploadFiles`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          onUploadProgress: (progressEvent) => {
-            this.uploadProgress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          },
-          withCredentials: true,
-        });
-          if (response.status === 200) {
-            this.filesToUpload = [];
-            this.uploadStatus = {
-              type: 'success',
-              message: 'Files uploaded successfully!'
-            };
-            this.uploadProgress = 0;
-            this.fetchFileCounts();
-          } else {
-            this.filesToUpload = [];
-            this.uploadStatus = {
-              type: 'error',
-              message: 'File upload failed!'
-            };
-            this.uploadProgress = 0;
-          }
-        } catch (error) {
-          this.filesToUpload = [];
-          this.uploadStatus = {
-            type: 'error',
-            message: 'Error uploading files: ' + error.message
-          };
-          this.uploadProgress = 0;
-        }
-      },
-      async submitLogout() {
-        try {
-          const response = await axios.get('/auth/logout', { withCredentials: true });
-
-          if (response.data.redirectUrl) {
-            window.location.href = response.data.redirectUrl;
-          } else {
-            console.log("Logout error", response.status);
-          }
-        } catch (error) {
-          console.error("Error during logout:", error);
-        }
-      },
+      
+      
       
       async initialLoad() {
         try {
           await Promise.all([
-            this.fetchDiskUsage(),
+            // this.fetchDiskUsage(),
             this.fetchFileCounts(),
             this.fetchUserID(),
             this.fetchPhotos()
@@ -531,19 +329,7 @@ import axios from '../../plugins/axios.js';
         }
       },
 
-      async fetchDiskUsage() {
-        try {
-          const response = await axios.get("/usage/disk-usage");
-          this.diskUsage = response.data.data;
-          
-          const used = this.parseSize(this.diskUsage.totalUsed);
-          const total = this.parseSize(this.diskUsage.totalSize);
-
-          this.progress = (used / total) * 100;
-        } catch (err) {
-          console.error("Error fetching disk usage:", err);
-        }
-      },
+    
 
       async fetchFileCounts() {
         try {
@@ -580,47 +366,24 @@ import axios from '../../plugins/axios.js';
         }
       },
 
-      async fetch(category) {
-        try {
-          this.loading = true;
-          this.currentCategory = category;
-          this.files = [];
-          this.searchFiles = []
-          this.searchQuery = ''
-          this.filesHeader = 'Files'
-          const response = await axios.get(`/fileServer/get/${category}`, { withCredentials: true });
-          if(response.data.files){
-            this.files = response.data.files; 
-            this.noFiles = false;
-          } else {
-            console.log("no files");
-            this.files = [];
-            this.noFiles = true;
-          }
-        } catch (err) {
-          console.error('Error fetching images:', err);
-        } finally {
-          this.loading = false;
-        }
+      updateLoading( value ) {
+        this.loading = value;
       },
-      
-      parseSize(sizeString) {
-        const sizeMatch = sizeString.match(/(\d+\.?\d*)\s*(GB|MB|TB)/i);
-        if (!sizeMatch) return 0;
-
-        const value = parseFloat(sizeMatch[1]);
-        const unit = sizeMatch[2].toUpperCase();
-
-        switch (unit) {
-          case "GB":
-            return value;
-          case "MB":
-            return value / 1024;  
-          case "TB":
-            return value * 1024;  
-          default:
-            return 0;
-        }
+      updateCurrentCategory( value ) {
+        this.currentCategory = value;
+      },
+      updateFiles( value ) {
+        this.files = value;
+      },
+      updateSearchFiles( value ) {
+        this.searchFiles = JSON.parse(JSON.stringify(value));
+        console.log(this.searchFiles)
+      },
+      updateFilesHeader( value ) {
+        this.filesHeader = value;
+      },
+      updateNoFiles( value ) {
+        this.noFiles = value;
       },
       deleteFile(file) {
         this.fileToDelete = file; 
@@ -672,30 +435,6 @@ import axios from '../../plugins/axios.js';
         };
 
         return icons[extension] || "mdi-file-document";
-      },
-      async handleSearch() {
-        try {
-          this.loading = true;
-          this.searchFiles = [];
-          this.files = [];
-          this.filesHeader = 'Search Results'
-          if (this.searchQuery.trim() !== '') {
-            try {
-              const response = await axios.get(`/fileServer/search?query=${this.searchQuery}`, { withCredentials: true });
-              this.searchFiles = response.data;
-            } catch (error) {
-              console.error("Error searching for files:", error);
-            }
-          } else {
-            this.searchFiles = [];
-            this.filesHeader = 'Files'
-            this.fetchPhotos();
-          }
-        } catch (error) {
-          console.log(error);
-        } finally {
-          this.loading = false;
-        }
       },
     },
   };
