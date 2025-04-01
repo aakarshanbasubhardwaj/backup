@@ -27,6 +27,7 @@ export default {
     },
     methods: {
         async handleSearch() {
+            this.$emit('searchQuery', this.searchQuery);
             try {
 
             this.$emit('update-loading', true)

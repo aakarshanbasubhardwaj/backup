@@ -1,5 +1,4 @@
 <template>
-    <v-app>
         <v-app-bar
         color="#06367a"
         prominent
@@ -54,7 +53,6 @@
           </v-list-item>
           </template>
       </v-navigation-drawer>
-    </v-app>
 </template>
 
 <script>

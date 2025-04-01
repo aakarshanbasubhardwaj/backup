@@ -63,6 +63,9 @@ export default {
 
             this.searchQuery = ''
             this.$emit('update-filesHeader', 'Files')
+            // for(let i = 0; i< 100000; i=i+1){
+            //     console.log(i)
+            // }
 
             const response = await axios.get(`/fileServer/get/${category}`, { withCredentials: true });
             if(response.data.files){
