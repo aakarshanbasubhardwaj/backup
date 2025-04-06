@@ -19,17 +19,24 @@ passport.use(new GoogleStrategy({
     passReqToCallback   : true
   },
   async function(request, accessToken, refreshToken, profile, done) {
-    let user = await User.findOne({ googleId: profile.id });
+    try {
+      let user = await User.findOne({ googleId: profile.id });
     
-    if (!user) {
-      user = await User.create({
-        googleId: profile.id,
-        email: profile.email,
-        displayName: profile.displayName,
-        storageBaseUrl: `${profile.id}/files`
-      });
+      if (!user) {
+        user = await User.create({
+          googleId: profile.id,
+          email: profile.email,
+          displayName: profile.displayName,
+          storageBaseUrl: `${profile.id}/files`
+        });
+      }
+
+    } catch ( error ) {
+        console.log("Error finding or creating user : ", error);
+    } finally {
+        return done(null, profile);
     }
-    return done(null, profile);
+    
   }
 ));
 
