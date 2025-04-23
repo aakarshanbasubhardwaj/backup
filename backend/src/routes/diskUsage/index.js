@@ -5,76 +5,42 @@ const router = Router();
 
 const getTotalDiskUsage = () => {
     return new Promise((resolve, reject) => {
-        exec('df -h', (error, stdout, stderr) => {
-        if (error) {
-            reject(`Error: ${error.message}`);
-            return;
-        }
-        if (stderr) {
-            reject(`Stderr: ${stderr}`);
-            return;
-        }
-
-        const lines = stdout.trim().split('\n').slice(1);
-        let totalSize = 0;
-        let totalUsed = 0;
-        let totalAvailable = 0;
-
-        lines.forEach(line => {
-            const columns = line.split(/\s+/);
-            if (columns.length < 6) {
-            return;
+        const command = "df -B1 / | awk 'NR>1 {printf \"%.2f %.2f %.2f %.1f\", $2/1024/1024/1024, $3/1024/1024/1024, $4/1024/1024/1024, ($3/$2)*100}'";
+        exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(`Error: ${error.message}`);
+                return;
             }
-            const size = columns[1];
-            const used = columns[2];
-            const available = columns[3];
+            if (stderr) {
+                reject(`Stderr: ${stderr}`);
+                return;
+            }
 
-            totalSize += parseSize(size);
-            totalUsed += parseSize(used);
-            totalAvailable += parseSize(available);
-        });
+            // Parse the output string (total used available percentage)
+            const [totalSize, totalUsed, totalAvailable, usagePercent] = stdout.trim().split(' ').map(Number);
 
-        resolve({
-            totalSize: formatSize(totalSize),
-            totalUsed: formatSize(totalUsed),
-            totalAvailable: formatSize(totalAvailable),
-        });
+            resolve({
+                totalSize: `${totalSize.toFixed(2)} GB`,
+                totalUsed: `${totalUsed.toFixed(2)} GB`,
+                totalAvailable: `${totalAvailable.toFixed(2)} GB`,
+                usagePercent: usagePercent
+            });
         });
     });
-};
-
-const parseSize = sizeStr => {
-    if (!sizeStr || typeof sizeStr !== 'string') {
-        return 0; 
-    }
-
-    const unit = sizeStr.slice(-1); 
-    const value = parseFloat(sizeStr.slice(0, -1));
-
-    if (unit === 'G') return value; 
-    if (unit === 'M') return value / 1024; 
-    if (unit === 'T') return value * 1024; 
-
-    return 0;
-};
-
-const formatSize = sizeInGB => {
-    if (sizeInGB >= 1024) return `${(sizeInGB / 1024).toFixed(2)}TB`; 
-        return `${sizeInGB.toFixed(2)}GB`; 
 };
 
 router.get('/disk-usage', async (req, res) => {
     try {
         const totalDiskUsage = await getTotalDiskUsage();
         res.status(200).json({
-        success: true,
-        data: totalDiskUsage,
+            success: true,
+            data: totalDiskUsage,
         });
-    } catch ( error ) {
+    } catch (error) {
         console.log("Error fetching disk usage : ", error);
         res.status(500).json({
-        success: false,
-        error: error.toString(),
+            success: false,
+            error: error.toString(),
         });
     }
 });
