@@ -21,12 +21,13 @@
                 >
                   <v-img
                     v-if="currentCategory === 'photos'"
-                    :src="`${baseURL}/fileServer/serve/${userID}/photos/${file.storedName}`"
+                    :src="getImageUrl(file)"
                     aspect-ratio="1/1"
                     class="bg-grey-lighten-2"
                     cover
                     max-height="200px"
                     @click="openFullScreen(file.storedName)"
+                    @error="handleImageError"
                   >
                     <template v-slot:placeholder>
                       <v-row
@@ -200,6 +201,7 @@
 
 <script>
 import axios from '../../plugins/axios.js';
+import heic2any from 'heic2any';
 
 
 export default {
@@ -222,6 +224,8 @@ export default {
             localFiles: this.files.slice(),
             baseURL: process.env.VUE_APP_ENV,
             dialog: false,
+            imageCache: new Map(), // Cache for converted HEIC images
+            imageUrls: new Map(), // Cache for all image URLs
         }
     },
 
@@ -232,86 +236,171 @@ export default {
     },
     
     methods: {
-        openFullScreen(file) {
-        this.fullScreenImage = `${this.baseURL}/fileServer/serve/${this.userID}/photos/${file}`;
-        this.dialog = true; 
-      },
-      forceFileDownload(response, title) {
-        console.log(title)
-        const url = window.URL.createObjectURL(new Blob([response.data]))
-        const link = document.createElement('a')
-        link.href = url
-        link.setAttribute('download', title)
-        document.body.appendChild(link)
-        link.click()
-      },
-      async downloadWithAxios(url, title) {
-        await axios.get(url,{ responseType: 'arraybuffer' })
-          .then((response) => {
-            this.forceFileDownload(response, title)
-          })
-          .catch(() => console.log('error occured'))
-      },
-      async fetchUserID() {
-        try {
-          const response = await axios.get('/fileServer/userID', { withCredentials: true });
-          this.userID = response.data;
-        } catch (err) {
-          console.error('Error fetching userID:', err);
-        }
-      },
-      deleteFile(file) {
-        this.fileToDelete = file; 
-        this.deleteDialog = true; 
-      },
-
-      confirmDelete() {
-        this.deleteDialog = false;
-        this.deleteConfirmedFile(this.fileToDelete); 
-      },
-      async deleteConfirmedFile(file) {
-        try {
-          const response = await axios.delete(`/fileServer/delete/file/${this.userID}/${this.currentCategory}/${file.storedName}`);
-
-          if (response.status === 200) {    
-            const index = this.localFiles.indexOf(file);
-            if (index !== -1) {
-              this.localFiles.splice(index, 1); 
+        getImageUrl(file) {
+            const url = `${this.baseURL}/fileServer/serve/${this.userID}/photos/${file.storedName}`;
+            
+            // Return cached URL if available
+            if (this.imageUrls.has(file.storedName)) {
+                return this.imageUrls.get(file.storedName);
             }
-            await this.$emit('update-FileCount');
-          }
-        } catch (err) {
-          console.error('Error deleting file:', err);
-        }
-      },
-      getDocumentIcon(fileName) {
-        const extension = fileName.split('.').pop().toLowerCase();
-        const icons = {
-          pdf: "mdi-file-pdf",
-          txt: "mdi-file-document-outline",
-          doc: "mdi-file-word",
-          docx: "mdi-file-word",
-          xls: "mdi-file-excel",
-          xlsx: "mdi-file-excel",
-          ppt: "mdi-file-powerpoint",
-          pptx: "mdi-file-powerpoint",
-          odt: "mdi-file-document",
-          ods: "mdi-file-table",
-          odp: "mdi-file-presentation-box",
-          csv: "mdi-file-delimited",
-          xml: "mdi-xml",
-          json: "mdi-code-json",
-          html: "mdi-language-html5",
-          htm: "mdi-language-html5",
-          tex: "mdi-file-document-outline",
-          yml: "mdi-file-code",
-          md: "mdi-language-markdown",
-          js: "mdi-language-javascript"
-        };
 
-        return icons[extension] || "mdi-file-document";
-      },
+            // Check if file is HEIC
+            if (file.originalName.toLowerCase().endsWith('.heic') || file.originalName.toLowerCase().endsWith('.heif')) {
+                // Check HEIC cache
+                if (this.imageCache.has(file.storedName)) {
+                    return this.imageCache.get(file.storedName);
+                }
+                
+                // Start conversion in background
+                this.convertHeicToJpeg(file, url);
+                
+                // Return original URL for now
+                return url;
+            }
+            
+            // Cache and return regular URL
+            this.imageUrls.set(file.storedName, url);
+            return url;
+        },
+
+        async convertHeicToJpeg(file, originalUrl) {
+            try {
+                // Fetch the HEIC file
+                const response = await axios.get(originalUrl, { responseType: 'blob' });
+                const heicBlob = new Blob([response.data], { type: 'image/heic' });
+                
+                // Convert HEIC to JPEG
+                const jpegBlob = await heic2any({
+                    blob: heicBlob,
+                    toType: 'image/jpeg',
+                    quality: 0.8
+                });
+                
+                // Create URL for the converted image
+                const jpegUrl = URL.createObjectURL(jpegBlob);
+                
+                // Cache the result
+                this.imageCache.set(file.storedName, jpegUrl);
+                this.imageUrls.set(file.storedName, jpegUrl);
+                
+                // Force re-render
+                this.$forceUpdate();
+            } catch (error) {
+                console.error('Error converting HEIC:', error);
+                // Cache original URL as fallback
+                this.imageUrls.set(file.storedName, originalUrl);
+            }
+        },
+
+        handleImageError(event) {
+            console.error('Image failed to load:', event);
+            // You could set a fallback image here
+        },
+
+        async openFullScreen(file) {
+            const fileObj = this.localFiles.find(f => f.storedName === file);
+            if (fileObj) {
+                this.fullScreenImage = this.getImageUrl(fileObj);
+                this.dialog = true;
+            }
+        },
+
+        forceFileDownload(response, title) {
+            console.log(title)
+            const url = window.URL.createObjectURL(new Blob([response.data]))
+            const link = document.createElement('a')
+            link.href = url
+            link.setAttribute('download', title)
+            document.body.appendChild(link)
+            link.click()
+        },
+
+        async downloadWithAxios(url, title) {
+            await axios.get(url,{ responseType: 'arraybuffer' })
+                .then((response) => {
+                    this.forceFileDownload(response, title)
+                })
+                .catch(() => console.log('error occured'))
+        },
+
+        async fetchUserID() {
+            try {
+                const response = await axios.get('/fileServer/userID', { withCredentials: true });
+                this.userID = response.data;
+            } catch (err) {
+                console.error('Error fetching userID:', err);
+            }
+        },
+
+        deleteFile(file) {
+            this.fileToDelete = file; 
+            this.deleteDialog = true; 
+        },
+
+        confirmDelete() {
+            this.deleteDialog = false;
+            this.deleteConfirmedFile(this.fileToDelete); 
+        },
+
+        async deleteConfirmedFile(file) {
+            try {
+                const response = await axios.delete(`/fileServer/delete/file/${this.userID}/${this.currentCategory}/${file.storedName}`);
+
+                if (response.status === 200) {    
+                    const index = this.localFiles.indexOf(file);
+                    if (index !== -1) {
+                        this.localFiles.splice(index, 1); 
+                    }
+                    await this.$emit('update-FileCount');
+                }
+            } catch (err) {
+                console.error('Error deleting file:', err);
+            }
+        },
+
+        getDocumentIcon(fileName) {
+            const extension = fileName.split('.').pop().toLowerCase();
+            const icons = {
+                pdf: "mdi-file-pdf",
+                txt: "mdi-file-document-outline",
+                doc: "mdi-file-word",
+                docx: "mdi-file-word",
+                xls: "mdi-file-excel",
+                xlsx: "mdi-file-excel",
+                ppt: "mdi-file-powerpoint",
+                pptx: "mdi-file-powerpoint",
+                odt: "mdi-file-document",
+                ods: "mdi-file-table",
+                odp: "mdi-file-presentation-box",
+                csv: "mdi-file-delimited",
+                xml: "mdi-xml",
+                json: "mdi-code-json",
+                html: "mdi-language-html5",
+                htm: "mdi-language-html5",
+                tex: "mdi-file-document-outline",
+                yml: "mdi-file-code",
+                md: "mdi-language-markdown",
+                js: "mdi-language-javascript"
+            };
+
+            return icons[extension] || "mdi-file-document";
+        },
     }
 }
 
 </script>
+
+<style>
+.image-container {
+  height: 500px; 
+  overflow-y: auto; 
+}
+
+.v-img {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.v-img--loading {
+  opacity: 0.6;
+}
+</style>
