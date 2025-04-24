@@ -3,6 +3,8 @@ import dotenv from 'dotenv';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import { processMultipleFiles } from '../../services/processingQueue.js';
+import File from '../../../db/models/metadata.js';
 
 const router = Router();
 
@@ -68,8 +70,40 @@ const dynamicUpload = (req, res, next) => {
     }
 };
 
-router.post('/uploadFiles', dynamicUpload, (req, res) => {
-    res.status(200).json({ message: `Files uploaded successfully!` });
+router.post('/uploadFiles', dynamicUpload, async (req, res) => {
+    try {
+        const fileIds = [];
+        
+        // Store file information in MongoDB
+        for (const file of req.files) {
+            const fileDoc = new File({
+                filename: file.filename,
+                originalname: file.originalname,
+                path: file.path,
+                size: file.size,
+                mimetype: file.mimetype,
+                userId: req.user.id,
+                ps: {
+                    p: false,
+                    n: 0,
+                    a: new Date()
+                }
+            });
+            
+            const savedFile = await fileDoc.save();
+            fileIds.push(savedFile._id);
+        }
+        
+        // Process metadata for all files in parallel
+        processMultipleFiles(fileIds).catch(error => {
+            console.error('Error processing metadata:', error);
+        });
+        
+        res.status(200).json({ message: `Files uploaded successfully!` });
+    } catch (error) {
+        console.error('Error processing files:', error);
+        res.status(500).json({ error: 'Error processing files' });
+    }
 });
 
 export default router;
