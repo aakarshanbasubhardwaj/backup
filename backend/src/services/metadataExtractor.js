@@ -7,14 +7,27 @@ const readFile = promisify(fs.readFile);
 
 // Initialize geocoder
 const options = {
-    provider: 'openstreetmap'
+    provider: 'openstreetmap',
+    addressdetails: 1  // This ensures we get the detailed address object
 };
 
 const geocoder = NodeGeocoder(options);
 
+// Track last geocoding request time
+let lastGeocodingTime = 0;
+
+// Function to ensure rate limit compliance
+async function waitForRateLimit() {
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastGeocodingTime;
+    if (timeSinceLastRequest < 1000) { // Wait for 1 second between requests
+        await new Promise(resolve => setTimeout(resolve, 1000 - timeSinceLastRequest));
+    }
+    lastGeocodingTime = Date.now();
+}
+
 export async function extractMetadata(file) {
     try {
-        console.log('Starting metadata extraction for file:', file.path);
         
         // Parse EXIF data with specific options
         const exifData = await exifr.parse(file.path, {
@@ -35,11 +48,13 @@ export async function extractMetadata(file) {
 
         if (exifData.latitude && exifData.longitude) {
             try {
+                await waitForRateLimit();
                 const geoResults = await geocoder.reverse({ lat: exifData.latitude, lon: exifData.longitude });
                 if (geoResults && geoResults.length > 0) {
                     const result = geoResults[0];
+                    
                     locationData = {
-                        p: exifData.GPSProcessingMethod || result.formattedAddress || null,
+                        p: result.formattedAddress || null,
                         c: result.city || null,
                         co: result.country || null
                     };
@@ -92,8 +107,6 @@ export async function extractMetadata(file) {
                 n: 1
             }
         };
-
-        console.log('Metadata extraction completed for file:', file.path);
 
         return metadata;
     } catch (error) {
