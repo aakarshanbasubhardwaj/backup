@@ -10,6 +10,8 @@
 
 </script>
 
-<style>
-
+<style scoped>
+body {
+  font-family: 'Inter', sans-serif;
+}
 </style>

@@ -1,0 +1,59 @@
+/* src/assets/responsive.css */
+
+/* Define common breakpoints */
+:root {
+    --breakpoint-xs: 0px;     /* Extra Small Devices */
+    --breakpoint-sm: 576px;   /* Small Devices */
+    --breakpoint-md: 768px;   /* Medium Devices */
+    --breakpoint-lg: 992px;   /* Large Devices */
+    --breakpoint-xl: 1200px;  /* Extra Large Devices */
+  }
+  
+  /* General styles for responsiveness */
+  .container {
+    width: 100%;
+    margin: 0 auto;
+  }
+  
+  /* Hide container on small devices */
+  @media (max-width: var(--breakpoint-sm)) {
+    .container {
+      display: none; /* Hide container for small devices */
+    }
+  }
+  
+  /* Example of responsive typography */
+  h1 {
+    font-size: 2em; /* Default size */
+  }
+  
+  @media (max-width: var(--breakpoint-md)) {
+    h1 {
+      font-size: 1.5em; /* Smaller size for medium devices */
+    }
+  }
+  
+  @media (max-width: var(--breakpoint-sm)) {
+    h1 {
+      font-size: 1.2em; /* Smaller size for small devices */
+    }
+  }
+  
+  /* Example of responsive padding */
+  .responsive-padding {
+    padding: 20px;
+  }
+  
+  @media (max-width: var(--breakpoint-md)) {
+    .responsive-padding {
+      padding: 15px; /* Adjust padding for medium devices */
+    }
+  }
+  
+  @media (max-width: var(--breakpoint-sm)) {
+    .responsive-padding {
+      padding: 10px; /* Adjust padding for small devices */
+    }
+  }
+  
+  

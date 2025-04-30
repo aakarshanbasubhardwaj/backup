@@ -7,10 +7,14 @@ RUN npm install
 
 COPY . .
 
-RUN npm run build
+RUN if [ "$ENV" = "production" ]; then npm run build; fi
 
-RUN npm install -g serve
+RUN if [ "$ENV" = "production" ]; then npm install -g serve; fi
 
 EXPOSE 8080
 
-CMD ["serve", "-s", "dist", "-l", "8080"]
+CMD if [ "$ENV" = "production" ]; then \
+    serve -s dist -l 8080; \
+    else \
+    npm run serve; \
+    fi

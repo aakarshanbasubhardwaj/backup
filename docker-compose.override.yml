@@ -5,6 +5,10 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - ENV=development
     depends_on:
       - backend
     restart: always
@@ -17,6 +21,7 @@ services:
       - "3000:3000"
     volumes:
       - /home/aakarshanbasubhardwaj/storage:/home/aakarshanbasubhardwaj/storage
+      - ./backend:/app
     restart: always
     depends_on:
       - mongo
