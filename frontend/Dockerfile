@@ -2,6 +2,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+ARG ENV
+ENV ENV=$ENV
+
 COPY package*.json ./
 RUN npm install
 
