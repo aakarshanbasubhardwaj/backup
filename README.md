@@ -50,8 +50,6 @@ docker compose up --build -d
 
 This command will build and start both the frontend and backend containers in detached mode.
 
----
-
 Local development environment is now ready! You can access the frontend ```at localhost:8080/``` and backend at the PORT as configured in  `backend/.env` file.
 
 ### 5. Start the Application Locally
