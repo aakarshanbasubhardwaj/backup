@@ -5,6 +5,7 @@ import vuetify from './plugins/vuetify'
 import { loadFonts } from './plugins/webfontloader'
 import BackupHome from './components/home/BackupHome.vue'
 import GoogleLogin from './components/auth/GoogleLogin.vue'
+import WaitForApproval from './components/approval/WaitForApproval.vue'
 import axios from './plugins/axios.js'
 
 loadFonts()
@@ -15,6 +16,7 @@ const router = createRouter({
     { path: '/', redirect: { name: 'Login' }},
     { path: '/home', name: "Home", component: BackupHome, meta: { requiresAuth: true } },
     { path: '/login', name: "Login", component: GoogleLogin },
+    { path: '/waitForApproval', name: "WaitForApproval", component: WaitForApproval },
   ]
 })
 
