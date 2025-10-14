@@ -19,24 +19,36 @@ passport.use(new GoogleStrategy({
     passReqToCallback   : true
   },
   async function(request, accessToken, refreshToken, profile, done) {
+    let user
     try {
-      let user = await User.findOne({ googleId: profile.id });
-    
-      if (!user) {
+      user = await User.findOne({ googleId: profile.id });
+      let adminCount = await User.countDocuments({isAdmin : true})
+      if (adminCount > 0 && !user) {
         user = await User.create({
           googleId: profile.id,
           email: profile.email,
           displayName: profile.displayName,
-          storageBaseUrl: `${profile.id}/files`
+          storageBaseUrl: `${profile.id}/files`,
+          isAdmin: false,
+          isActive: false
+        });
+      } else if (adminCount === 0 && !user){
+        user = await User.create({
+          googleId: profile.id,
+          email: profile.email,
+          displayName: profile.displayName,
+          storageBaseUrl: `${profile.id}/files`,
+          isAdmin: true,
+          isActive: true
         });
       }
 
     } catch ( error ) {
         console.log("Error finding or creating user : ", error);
     } finally {
-        return done(null, profile);
+        // return done(null, profile);
+        return done(null, user);
     }
-    
   }
 ));
 
@@ -48,11 +60,11 @@ passport.deserializeUser(function(user, done){
     done(null, user);
 });
 function isLoggedIn(req, res, next){
-  req.user ? next() : res.sendStatus(401);
+  req.user && req.user.isActive ? next() : res.redirect(`${ALLOWED_ORIGINS}/waitForApproval`);
 };
 
 router.get('/status', (req, res) => {
-  req.user ? res.status(200).json({ authenticated: true }) : res.status(200).json({ authenticated: false });
+  req.user && req.user.isActive ? res.status(200).json({ authenticated: true }) : res.status(200).json({ authenticated: false });
 });
 
 router.get('/google', 
@@ -86,6 +98,10 @@ router.get('/logout', isLoggedIn, (req, res) => {
     res.status(200).json({ redirectUrl: '/login' });
 
   });
+});
+
+router.get('/whoami', (req, res) => {
+  res.status(200).json({ myInfo: req.user });
 });
 
 export default router;
