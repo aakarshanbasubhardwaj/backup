@@ -100,4 +100,8 @@ router.get('/logout', isLoggedIn, (req, res) => {
   });
 });
 
+router.get('/whoami', (req, res) => {
+  res.status(200).json({ myInfo: req.user });
+});
+
 export default router;
