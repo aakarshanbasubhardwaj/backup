@@ -21,13 +21,24 @@ passport.use(new GoogleStrategy({
   async function(request, accessToken, refreshToken, profile, done) {
     try {
       let user = await User.findOne({ googleId: profile.id });
-    
-      if (!user) {
+      let adminCount = await User.countDocuments({isAdmin : true})
+      if (adminCount > 0 && !user) {
         user = await User.create({
           googleId: profile.id,
           email: profile.email,
           displayName: profile.displayName,
-          storageBaseUrl: `${profile.id}/files`
+          storageBaseUrl: `${profile.id}/files`,
+          isAdmin: false,
+          isActive: false
+        });
+      } else if (adminCount === 0 && !user){
+        user = await User.create({
+          googleId: profile.id,
+          email: profile.email,
+          displayName: profile.displayName,
+          storageBaseUrl: `${profile.id}/files`,
+          isAdmin: true,
+          isActive: true
         });
       }
 
