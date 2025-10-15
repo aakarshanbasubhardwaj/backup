@@ -6,6 +6,8 @@ const UserSchema = new mongoose.Schema({
   displayName: { type: String },
   // mfaSecret: { type: String, required: true },
   storageBaseUrl: { type: String, required: true},
+  isAdmin: { type: Boolean, required: true},
+  isActive: { type: Boolean, required: true},
 });
 
 const User = mongoose.model('User', UserSchema);

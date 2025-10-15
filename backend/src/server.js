@@ -8,6 +8,7 @@ import auth from './routes/auth/index.js';
 import upload from './routes/upload/index.js';
 import usage from './routes/diskUsage/index.js';
 import fileServer from './routes/fileServer/index.js';
+import admin from './routes/admin/index.js';
 
 dotenv.config();
 
@@ -44,6 +45,8 @@ app.use("/auth", auth);
 app.use("/upload", upload);
 app.use("/usage", usage);
 app.use("/fileServer", fileServer);
+app.use("/admin", admin);
+
 
 await conn.connectToDatabase();
 
