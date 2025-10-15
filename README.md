@@ -1,3 +1,7 @@
+# API Documentation
+
+API documentation is available at: [Swagger UI](https://aakarshanbasubhardwaj.github.io/backup/)
+
 # Getting Started for Local Development
 
 This guide will help set up the project locally.
