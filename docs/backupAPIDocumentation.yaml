@@ -1,0 +1,700 @@
+openapi: 3.0.4
+info:
+  title: Cloud Storage & File Backup System for Home Lab - OpenAPI 3.0
+  description: |-
+    - A self-hosted, cloud storage, full stack solution based on MEVN stack.
+    - MongoDB for efficient file metadata storage.
+    - Containerized system using Docker with persistent data storage.
+
+  # termsOfService: https://swagger.io/terms/
+  # contact:
+  #   email: apiteam@swagger.io
+  # license:
+  #   name: Apache 2.0
+  #   url: https://www.apache.org/licenses/LICENSE-2.0.html
+  version: 1.0.0
+externalDocs:
+  description: GitHub Repository
+  url: https://github.com/aakarshanbasubhardwaj/backup
+servers:
+  - url: http://localhost:3000/
+tags:
+  - name: auth
+    description: Authentication
+  - name: upload
+    description: File upload paths
+  - name: usage
+    description: Server storage space usage
+  - name: fileServer
+    description: File server for stored files
+  - name: admin
+    description: Admin functions
+paths:
+  /auth/status:
+    get:
+      tags:
+        - auth
+      summary: Check authentication status
+      description: Returns whether the current user is authenticated and active.
+      responses:
+        '200':
+          description: Authentication status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  authenticated:
+                    type: boolean
+                    description: True if the user is logged in and active
+              examples:
+                authenticated:
+                  value:
+                    authenticated: true
+                unauthenticated:
+                  value:
+                    authenticated: false
+  /auth/google:
+    get:
+      tags:
+        - auth
+      summary: Authenticate with Google
+      description: Initiates Google OAuth login. Redirects the user to Google's consent screen for email and profile access.
+      responses:
+        '302':
+          description: Redirects to Google OAuth login page
+        '400':
+          description: Bad request if authentication initiation fails
+      security: []
+  /auth/protected:
+    get:
+      tags:
+        - auth
+      summary: Protected route
+      description: Accessible only to authenticated users. Redirects the user to the frontend home page.
+      responses:
+        '302':
+          description: Redirects authenticated user to frontend home page
+        '401':
+          description: Unauthorized if the user is not logged in
+  /auth/loggedin:
+    get:
+      tags:
+        - auth
+      summary: Google OAuth callback
+      description: Handles Google OAuth login callback. Redirects on success or failure.
+      responses:
+        '302':
+          description: Redirects to /auth/protected on successful login or /auth/failure on failure
+  /auth/failure:
+    get:
+      tags:
+        - auth
+      summary: OAuth failure redirect
+      description: Redirects the user to the login page after failed authentication.
+      responses:
+        '302':
+          description: Redirects to the login page
+  /auth/logout:
+    get:
+      tags:
+        - auth
+      summary: Logout the current user
+      description: Logs out an authenticated user, destroys the session, clears cookies, and returns the redirect URL to the login page.
+      responses:
+        '200':
+          description: Successfully logged out
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  redirectUrl:
+                    type: string
+                    example: /login
+        '401':
+          description: Unauthorized if the user is not logged in 
+  /auth/whoami:
+    get:
+      tags:
+        - auth
+      summary: Get current user info
+      description: Returns information about the currently authenticated user.
+      responses:
+        '200':
+          description: Current user information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  myInfo:
+                    $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized if no user is logged in   
+  /upload/uploadFiles:
+    post:
+      tags:
+        - upload
+      summary: Upload multiple files
+      description: Uploads multiple files, stores file info in MongoDB, and processes metadata asynchronously.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+      responses:
+        '200':
+          description: Files uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Files uploaded successfully!"
+        '500':
+          description: Error processing files
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error processing files"
+  /usage/disk-usage:
+    get:
+      tags:
+        - usage
+      summary: Get total disk usage
+      description: Returns the total disk usage of all stored files.
+      responses:
+        '200':
+          description: Total disk usage retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    description: Disk usage details
+                    example:
+                      totalSize: 104857600
+                      usedSize: 52428800
+        '500':
+          description: Error fetching disk usage
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  error:
+                    type: string
+                    example: "Error fetching disk usage"        
+  /fileServer/file-counts:
+    get:
+      tags:
+        - fileServer
+      summary: Get file counts by category
+      description: Returns the number of files in each category (photos, videos, audio, documents, others) for the authenticated user.
+      responses:
+        '200':
+          description: File counts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  photos:
+                    type: integer
+                    example: 10
+                  videos:
+                    type: integer
+                    example: 5
+                  audio:
+                    type: integer
+                    example: 3
+                  documents:
+                    type: integer
+                    example: 8
+                  others:
+                    type: integer
+                    example: 2
+        '500':
+          description: Server error
+  
+  /fileServer/serve/{userId}/{category}/{*}:
+    get:
+      tags:
+        - fileServer
+      summary: Serve a specific file
+      description: Returns the requested file from the user's storage folder.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: '*'
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Encoded file name
+      responses:
+        '200':
+          description: File served successfully
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+        '500':
+          description: Server error
+  
+  /fileServer/get/{category}:
+    get:
+      tags:
+        - fileServer
+      summary: Get all files in a category
+      description: Returns all files for the authenticated user in the specified category.
+      parameters:
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of files retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        storedName:
+                          type: string
+                          example: "1697261876123-file.jpg"
+                        originalName:
+                          type: string
+                          example: "file.jpg"
+        '500':
+          description: Server error
+  
+  /fileServer/userID:
+    get:
+      tags:
+        - fileServer
+      summary: Get authenticated user ID
+      description: Returns the user ID of the authenticated user.
+      responses:
+        '200':
+          description: User ID retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "1234567890"
+        '500':
+          description: Server error
+  
+  /fileServer/delete/file/{userId}/{category}/{fileName}:
+    delete:
+      tags:
+        - fileServer
+      summary: Delete a specific file
+      description: Deletes a file for a specific user in the specified category.
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: category
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: fileName
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: File deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "File deleted successfully"
+        '500':
+          description: Server Error
+  
+  /fileServer/search:
+    get:
+      tags:
+        - fileServer
+      summary: Search files by query
+      description: Searches for files in all categories of the authenticated user's storage folder.
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Matching files found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    storedName:
+                      type: string
+                      example: "1697261876123-file.jpg"
+                    originalName:
+                      type: string
+                      example: "file.jpg"
+                    folder:
+                      type: string
+                      example: "photos"
+        '404':
+          description: No files found
+        '500':
+          description: Server error
+  /admin/getUsers:
+    get:
+      tags:
+        - admin
+      summary: Get all users
+      description: Returns a list of all users. Accessible only to admin users.
+      responses:
+        '200':
+          description: List of users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden if the user is not an admin
+  
+  /admin/activateUser:
+    post:
+      tags:
+        - admin
+      summary: Activate a user
+      description: Activates a user account. Accessible only to admin users.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: Google ID of the user to activate
+                  example: "1234567890"
+      responses:
+        '200':
+          description: User activated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User activated"
+        '400':
+          description: userId is required
+        '404':
+          description: User not found
+        '500':
+          description: Problem activating user
+        '403':
+          description: Forbidden if the requester is not admin
+  
+  /admin/deactivateUser:
+    post:
+      tags:
+        - admin
+      summary: Deactivate a user
+      description: Deactivates a user account. Accessible only to admin users.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: Google ID of the user to deactivate
+                  example: "1234567890"
+      responses:
+        '200':
+          description: User deactivated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User deactivated"
+        '400':
+          description: User already inactive
+        '404':
+          description: User not found
+        '500':
+          description: Problem deactivating user
+        '403':
+          description: Forbidden if the requester is not admin
+  
+  /admin/makeAdmin:
+    post:
+      tags:
+        - admin
+      summary: Promote a user to admin
+      description: Grants admin privileges to a user. User must be active. Accessible only to admin users.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: Google ID of the user to promote
+                  example: "1234567890"
+      responses:
+        '200':
+          description: User is now an admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User is now an admin"
+        '400':
+          description: userId missing
+        '403':
+          description: User must be active or forbidden if requester is not admin
+        '404':
+          description: User not found
+        '500':
+          description: Problem adding admin
+  
+  /admin/removeAdmin:
+    post:
+      tags:
+        - admin
+      summary: Remove admin privileges from a user
+      description: Revokes admin privileges from a user. Accessible only to admin users.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: Google ID of the user to demote
+                  example: "1234567890"
+      responses:
+        '200':
+          description: User is no longer an admin
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User is no longer an admin"
+        '400':
+          description: userId missing or user is already not an admin
+        '404':
+          description: User not found
+        '500':
+          description: Problem removing admin
+        '403':
+          description: Forbidden if the requester is not admin
+   
+components:
+  schemas:
+    User:
+      type: object
+      required:
+        - googleId
+        - email
+        - storageBaseUrl
+        - isAdmin
+        - isActive
+      properties:
+        googleId:
+          type: string
+          description: Google account ID (unique)
+          example: "1234567890"
+        email:
+          type: string
+          description: User's email address (unique)
+          example: "john@example.com"
+        displayName:
+          type: string
+          description: User's display name
+          example: "John Doe"
+        storageBaseUrl:
+          type: string
+          description: Base URL for user's storage
+          example: "1234567890/files"
+        isAdmin:
+          type: boolean
+          description: True if user has admin privileges
+          example: false
+        isActive:
+          type: boolean
+          description: True if user account is active
+          example: true
+    FileMetadata:
+      type: object
+      required:
+        - filename
+        - originalname
+        - path
+        - size
+        - mimetype
+        - userId
+        - ps
+      properties:
+        filename:
+          type: string
+          description: Stored file name
+          example: "1697261876123-file.jpg"
+        originalname:
+          type: string
+          description: Original file name uploaded by user
+          example: "file.jpg"
+        path:
+          type: string
+          description: File path on the server
+          example: "/storage/1234567890/photos/1697261876123-file.jpg"
+        size:
+          type: integer
+          description: File size in bytes
+          example: 1048576
+        mimetype:
+          type: string
+          description: MIME type of the file
+          example: "image/jpeg"
+        userId:
+          type: string
+          description: ID of the user who owns the file
+          example: "1234567890"
+        md:
+          type: object
+          description: Metadata extracted from the file
+          properties:
+            dt:
+              type: string
+              format: date-time
+              description: Date the file was taken or created
+              example: "2025-10-15T10:00:00Z"
+            loc:
+              type: object
+              description: Location information
+              properties:
+                p:
+                  type: string
+                  description: Place
+                  example: "Eiffel Tower"
+                c:
+                  type: string
+                  description: City
+                  example: "Paris"
+                co:
+                  type: string
+                  description: Country
+                  example: "France"
+            dev:
+              type: object
+              description: Device information
+              properties:
+                m:
+                  type: string
+                  description: Device make
+                  example: "Canon"
+                mo:
+                  type: string
+                  description: Device model
+                  example: "EOS 80D"
+        ps:
+          type: object
+          description: Processing status
+          properties:
+            p:
+              type: boolean
+              description: Whether the file has been processed
+              example: true
+            h:
+              type: boolean
+              description: Whether metadata has been extracted
+              example: true
+            a:
+              type: string
+              format: date-time
+              description: Last attempt date for processing
+              example: "2025-10-15T10:30:00Z"
+            n:
+              type: integer
+              description: Number of attempts
+              example: 1
+            e:
+              type: string
+              description: Error message if processing failed
+              example: ""
